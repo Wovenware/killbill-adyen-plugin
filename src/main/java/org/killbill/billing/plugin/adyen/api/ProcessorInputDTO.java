@@ -37,6 +37,10 @@ public class ProcessorInputDTO {
 
   private String kbAccountId;
 
+  private String kbPaymentMethodId;
+
+  private String kbTransactionId;
+
   private LocalDate salesDate;
 
   private PaymentMethod paymentMethod;

@@ -72,7 +72,9 @@ public class CreditCardProcessorImpl implements GatewayProcessor {
   public ProcessorOutputDTO processPayment(ProcessorInputDTO input) {
     CreateCheckoutSessionResponse response = null;
     try {
-      response = httpClient.checkoutsessions(input.getCurrency(), input.getAmount());
+      response =
+          httpClient.checkoutsessions(
+              input.getCurrency(), input.getAmount(), input.getKbTransactionId());
     } catch (IOException e) {
       e.printStackTrace();
     } catch (ApiException e) {
@@ -81,6 +83,9 @@ public class CreditCardProcessorImpl implements GatewayProcessor {
     ProcessorOutputDTO outputDTO = new ProcessorOutputDTO();
     outputDTO.setFirstPaymentReferenceId(response.getId());
     outputDTO.setSecondPaymentReferenceId(response.getMerchantOrderReference());
+    Map<String, String> additionalData = new HashMap<>();
+    additionalData.put("sessionData", response.getSessionData());
+    outputDTO.setAdditionalData(additionalData);
     return outputDTO;
   }
 

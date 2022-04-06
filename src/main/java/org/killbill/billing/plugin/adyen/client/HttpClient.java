@@ -23,6 +23,7 @@ import org.killbill.billing.catalog.api.Currency;
 
 public interface HttpClient {
 
-  public CreateCheckoutSessionResponse checkoutsessions(Currency currency, BigDecimal kbAmount)
+  public CreateCheckoutSessionResponse checkoutsessions(
+      Currency currency, BigDecimal kbAmount, String transactionId)
       throws IOException, ApiException;
 }
