@@ -120,15 +120,12 @@ public class AdyenPaymentPluginApiHelper {
 
   public List<PluginProperty> mapToPluginPropertyList(Map<String, String> map) {
     List<PluginProperty> pluginList = new ArrayList<>();
-    StringBuilder mapAsString = new StringBuilder();
     for (Map.Entry<String, String> entry : map.entrySet()) {
       String key = entry.getKey();
       String value = entry.getValue();
 
-      mapAsString.append(key + "=" + value + "&");
+      pluginList.add(new PluginProperty(key, value, true));
     }
-    mapAsString.delete(mapAsString.length() - 1, mapAsString.length());
-    pluginList.add(new PluginProperty("Response", mapAsString, true));
     return pluginList;
   }
 

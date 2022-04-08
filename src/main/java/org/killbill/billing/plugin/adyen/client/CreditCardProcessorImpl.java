@@ -76,10 +76,14 @@ public class CreditCardProcessorImpl implements GatewayProcessor {
           httpClient.checkoutsessions(
               input.getCurrency(), input.getAmount(), input.getKbTransactionId());
     } catch (IOException e) {
+      logger.error("IO Exception{}", e.getMessage(), e);
       e.printStackTrace();
     } catch (ApiException e) {
+
+      logger.error("API Exception {} \n {}", e.getError(), e.getMessage(), e);
       e.printStackTrace();
     }
+    logger.info("the response {}", response);
     ProcessorOutputDTO outputDTO = new ProcessorOutputDTO();
     outputDTO.setFirstPaymentReferenceId(response.getId());
     outputDTO.setSecondPaymentReferenceId(response.getMerchantOrderReference());

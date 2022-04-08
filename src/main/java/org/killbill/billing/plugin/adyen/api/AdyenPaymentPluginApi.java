@@ -15,7 +15,6 @@
  */
 package org.killbill.billing.plugin.adyen.api;
 
-
 import com.google.common.collect.ImmutableList;
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -100,6 +99,28 @@ public class AdyenPaymentPluginApi
       if (records == null || records.isEmpty()) {
 
         return new ArrayList<>();
+      }
+      for (AdyenResponsesRecord record : records) {
+        Map<String, String> additionalDataMap =
+            helper.getAdditionalDataMap(record.getAdditionalData());
+        List<PluginProperty> pluginProperty = helper.mapToPluginPropertyList(additionalDataMap);
+        PaymentTransactionInfoPlugin infoPlugin =
+            new AdyenPaymentTransactionInfoPlugin(
+                record,
+                kbPaymentId,
+                UUID.fromString(record.getKbPaymentTransactionId()),
+                TransactionType.valueOf(record.getTransactionType()),
+                record.getAmount(),
+                Currency.valueOf(record.getCurrency()),
+                PaymentPluginStatus.valueOf(record.getTransactionStatus()),
+                null,
+                null,
+                record.getSessionId(),
+                null,
+                DateTime.parse(record.getCreatedDate().toString()),
+                DateTime.parse(record.getCreatedDate().toString()),
+                pluginProperty);
+        result.add(infoPlugin);
       }
 
     } catch (SQLException e) {
@@ -266,13 +287,32 @@ public class AdyenPaymentPluginApi
     ProcessorInputDTO input =
         gatewayProcessor.validateData(
             adyenConfigurationHandler, mergedProperties, kbPaymentMethodId, kbAccountId);
+    input.setAmount(amount);
     input.setKbTransactionId(kbTransactionId.toString());
+    input.setCurrency(currency);
     ProcessorOutputDTO outputDTO = gatewayProcessor.processPayment(input);
     List<PluginProperty> formFields = new ArrayList<>();
     formFields.add(
         new PluginProperty(SESSION_DATA, outputDTO.getAdditionalData().get(SESSION_DATA), false));
+    AdyenResponsesRecord adyenRecord = null;
+    try {
+      adyenRecord =
+          this.adyenDao.addResponse(
+              kbAccountId,
+              kbPaymentId,
+              kbTransactionId,
+              TransactionType.PURCHASE,
+              amount,
+              currency,
+              PaymentPluginStatus.PENDING,
+              outputDTO.getFirstPaymentReferenceId(),
+              outputDTO,
+              context.getTenantId());
+    } catch (SQLException e) {
+      logger.error("We encountered a database error ", e);
+    }
     return new AdyenPaymentTransactionInfoPlugin(
-        null,
+        adyenRecord,
         kbPaymentId,
         kbTransactionId,
         TransactionType.PURCHASE,
@@ -379,23 +419,29 @@ public class AdyenPaymentPluginApi
       final Iterable<PluginProperty> properties,
       final CallContext context)
       throws PaymentPluginApiException {
-
+    Account kbAccount = null;
+    Payment payment = null;
     try {
-      Account kbAccount = killbillAPI.getAccountUserApi().getAccountById(kbAccountId, context);
+      kbAccount = killbillAPI.getAccountUserApi().getAccountById(kbAccountId, context);
       //      paymentMethodId =
       //          killbillAPI
       //              .getPaymentApi()
       //              .addPaymentMethod(kbAccount, null, PLUGIN_NAME, true, null, properties,
       // context);
+    } catch (AccountApiException e) {
+      logger.error("Account Api {}", e.getMessage(), e);
+      throw new PaymentPluginApiException(INTERNAL, e.getMessage());
+    }
+    try {
       final Map<String, String> mergedProperties =
           PluginProperties.toStringMap(properties, customFields);
-      Payment payment =
+      payment =
           killbillAPI
               .getPaymentApi()
               .createPurchase(
                   kbAccount,
                   UUID.fromString(mergedProperties.get("paymentMethodId")),
-                  UUID.randomUUID(),
+                  null,
                   BigDecimal.valueOf(Long.valueOf(mergedProperties.get("amount"))),
                   kbAccount.getCurrency(),
                   DateTime.now(),
@@ -403,23 +449,24 @@ public class AdyenPaymentPluginApi
                   null,
                   properties,
                   context);
-      PaymentTransactionInfoPlugin paymentInfo =
-          payment
-              .getTransactions()
-              .get(payment.getTransactions().size() - 1)
-              .getPaymentInfoPlugin();
-      List<PluginProperty> formFields = new ArrayList<>();
-      formFields.add(new PluginProperty("id", paymentInfo.getFirstPaymentReferenceId(), false));
-      formFields.add(
-          new PluginProperty(SESSION_DATA, paymentInfo.getProperties().get(0).getValue(), false));
-      return new PluginHostedPaymentPageFormDescriptor(
-          kbAccount.getId(),
-          this.adyenConfigurationHandler.getConfigurable(context.getTenantId()).getReturnUrl(),
-          formFields);
-    } catch (PaymentApiException | AccountApiException e) {
-
+    } catch (PaymentApiException e) {
+      logger.error("Payment Api {}", e.getMessage(), e);
       throw new PaymentPluginApiException(INTERNAL, e.getMessage());
     }
+    logger.info("payment {}", payment);
+    logger.info("payment transaction {}", payment.getTransactions());
+    PaymentTransactionInfoPlugin paymentInfo =
+        payment.getTransactions().get(payment.getTransactions().size() - 1).getPaymentInfoPlugin();
+
+    List<PluginProperty> formFields = new ArrayList<>();
+    formFields.add(
+        new PluginProperty("sessionId", paymentInfo.getFirstPaymentReferenceId(), false));
+    formFields.add(
+        new PluginProperty(SESSION_DATA, paymentInfo.getProperties().get(0).getValue(), false));
+    return new PluginHostedPaymentPageFormDescriptor(
+        kbAccount.getId(),
+        this.adyenConfigurationHandler.getConfigurable(context.getTenantId()).getReturnUrl(),
+        formFields);
   }
 
   @Override

@@ -266,6 +266,26 @@ public class AdyenResponsesRecord extends UpdatableRecordImpl<AdyenResponsesReco
     return (String) get(24);
   }
 
+  /** Setter for <code>killbill.adyen_responses.session_id</code>. */
+  public void setSessionId(String value) {
+    set(25, value);
+  }
+
+  /** Getter for <code>killbill.adyen_responses.session_id</code>. */
+  public String getSessionId() {
+    return (String) get(25);
+  }
+
+  /** Setter for <code>killbill.adyen_responses.transaction_status</code>. */
+  public void setTransactionStatus(String value) {
+    set(26, value);
+  }
+
+  /** Getter for <code>killbill.adyen_responses.transaction_status</code>. */
+  public String getTransactionStatus() {
+    return (String) get(26);
+  }
+
   // -------------------------------------------------------------------------
   // Primary key information
   // -------------------------------------------------------------------------
@@ -310,7 +330,9 @@ public class AdyenResponsesRecord extends UpdatableRecordImpl<AdyenResponsesReco
       String paRequest,
       String additionalData,
       LocalDateTime createdDate,
-      String kbTenantId) {
+      String kbTenantId,
+      String sessionId,
+      String transactionStatus) {
     super(AdyenResponses.ADYEN_RESPONSES);
 
     setRecordId(recordId);
@@ -338,5 +360,7 @@ public class AdyenResponsesRecord extends UpdatableRecordImpl<AdyenResponsesReco
     setAdditionalData(additionalData);
     setCreatedDate(createdDate);
     setKbTenantId(kbTenantId);
+    setSessionId(sessionId);
+    setTransactionStatus(transactionStatus);
   }
 }

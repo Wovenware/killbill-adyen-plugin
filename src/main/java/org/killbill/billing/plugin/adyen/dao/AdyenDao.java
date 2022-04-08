@@ -268,7 +268,6 @@ public class AdyenDao
         });
   }
 
-  @SuppressWarnings({"squid:S00107", "squid:S1188"})
   public AdyenResponsesRecord addResponse(
       UUID kbAccountId,
       UUID kbPaymentId,
@@ -276,6 +275,8 @@ public class AdyenDao
       TransactionType transactionType,
       BigDecimal amount,
       Currency currency,
+      PaymentPluginStatus status,
+      String sessionId,
       ProcessorOutputDTO outputDTO,
       UUID tenantId)
       throws SQLException {
@@ -296,6 +297,8 @@ public class AdyenDao
                     ADYEN_RESPONSES.KB_PAYMENT_ID,
                     ADYEN_RESPONSES.KB_PAYMENT_TRANSACTION_ID,
                     ADYEN_RESPONSES.TRANSACTION_TYPE,
+                    ADYEN_RESPONSES.TRANSACTION_STATUS,
+                    ADYEN_RESPONSES.SESSION_ID,
                     ADYEN_RESPONSES.AMOUNT,
                     ADYEN_RESPONSES.CURRENCY,
                     ADYEN_RESPONSES.ADDITIONAL_DATA,
@@ -306,6 +309,8 @@ public class AdyenDao
                     kbPaymentId.toString(),
                     kbTransactionId.toString(),
                     transactionType.toString(),
+                    status.toString(),
+                    sessionId,
                     dbAmount,
                     dbCurrency,
                     asString(outputDTO.getAdditionalData()),

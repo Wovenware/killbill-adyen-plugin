@@ -35,7 +35,7 @@ public class HttpClientImpl implements HttpClient {
   public HttpClientImpl(AdyenConfigProperties adyenConfigProperties) {
     this.adyenConfigProperties = adyenConfigProperties;
     Client client = new Client(adyenConfigProperties.getApiKey(), Environment.TEST);
-    checkout = new Checkout(client);
+    this.checkout = new Checkout(client);
   }
 
   @Override
@@ -46,10 +46,11 @@ public class HttpClientImpl implements HttpClient {
     Amount amount = new Amount().currency(currency.name()).value(kbAmount.longValue());
     CreateCheckoutSessionRequest checkoutSession = new CreateCheckoutSessionRequest();
     checkoutSession.merchantAccount(adyenConfigProperties.getMerchantAccount());
-    checkoutSession.setChannel(CreateCheckoutSessionRequest.ChannelEnum.WEB);
+    //    checkoutSession.setChannel(CreateCheckoutSessionRequest.ChannelEnum.WEB);
     checkoutSession.setReference(transactionId);
     checkoutSession.setReturnUrl(adyenConfigProperties.getReturnUrl());
     checkoutSession.setAmount(amount);
+    checkoutSession.setCountryCode("US");
 
     return checkout.sessions(checkoutSession);
   }

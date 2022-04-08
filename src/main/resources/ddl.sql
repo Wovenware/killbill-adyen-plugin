@@ -40,8 +40,10 @@ create table adyen_responses (
 , kb_payment_id char(36) not null
 , kb_payment_transaction_id char(36) not null
 , transaction_type varchar(32) not null
+, transaction_status varchar(32) not null
 , amount numeric(15,9)
 , currency char(3)
+, session_id char(36) default null 
 , psp_result varchar(64)
 , psp_reference varchar(64)
 , auth_code varchar(64)

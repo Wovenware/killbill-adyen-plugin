@@ -219,6 +219,22 @@ public class AdyenResponses extends TableImpl<AdyenResponsesRecord> {
   public final TableField<AdyenResponsesRecord, String> KB_TENANT_ID =
       createField(DSL.name("kb_tenant_id"), SQLDataType.CHAR(36).nullable(false), this, "");
 
+  /** The column <code>killbill.adyen_responses.session_id</code>. */
+  public final TableField<AdyenResponsesRecord, String> SESSION_ID =
+      createField(
+          DSL.name("session_id"),
+          SQLDataType.VARCHAR(36).defaultValue(DSL.inline("NULL", SQLDataType.VARCHAR)),
+          this,
+          "");
+
+  /** The column <code>killbill.adyen_responses.transaction_status</code>. */
+  public final TableField<AdyenResponsesRecord, String> TRANSACTION_STATUS =
+      createField(
+          DSL.name("transaction_status"),
+          SQLDataType.VARCHAR(36).defaultValue(DSL.inline("NULL", SQLDataType.VARCHAR)),
+          this,
+          "");
+
   private AdyenResponses(Name alias, Table<AdyenResponsesRecord> aliased) {
     this(alias, aliased, null);
   }
