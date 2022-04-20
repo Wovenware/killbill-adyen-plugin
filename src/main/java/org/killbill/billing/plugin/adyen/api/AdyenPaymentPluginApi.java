@@ -476,7 +476,7 @@ public class AdyenPaymentPluginApi
       final CallContext context)
       throws PaymentPluginApiException {
     logger.info("Notification recieved");
-    return new PluginGatewayNotification(notification);
+    return new PluginGatewayNotification("[accepted]");
   }
 
   public AdyenPaymentPluginApiHelper getHelper() {
