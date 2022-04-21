@@ -27,6 +27,7 @@ import org.killbill.billing.osgi.libs.killbill.OSGIKillbillEventDispatcher.OSGIF
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.plugin.adyen.api.AdyenPaymentPluginApi;
 import org.killbill.billing.plugin.adyen.core.resources.AdyenHealthcheckServlet;
+import org.killbill.billing.plugin.adyen.core.resources.AdyenNotificationServlet;
 import org.killbill.billing.plugin.adyen.dao.AdyenDao;
 import org.killbill.billing.plugin.api.notification.PluginConfigurationEventHandler;
 import org.killbill.billing.plugin.core.config.PluginEnvironmentConfig;
@@ -79,7 +80,10 @@ public class AdyenActivator extends KillbillActivatorBase {
     final PluginApp pluginApp =
         new PluginAppBuilder(PLUGIN_NAME, killbillAPI, dataSource, super.clock, configProperties)
             .withRouteClass(AdyenHealthcheckServlet.class)
+            .withRouteClass(AdyenNotificationServlet.class)
             .withService(healthcheck)
+            .withService(paymentPluginApi)
+            .withService(clock)
             .build();
     final HttpServlet httpServlet = PluginApp.createServlet(pluginApp);
     registerServlet(context, httpServlet);
