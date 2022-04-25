@@ -16,6 +16,7 @@
 package org.killbill.billing.plugin.adyen.client;
 
 import com.adyen.model.checkout.CreateCheckoutSessionResponse;
+import com.adyen.model.checkout.PaymentRefundResource;
 import com.adyen.service.exception.ApiException;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -25,5 +26,9 @@ public interface HttpClient {
 
   public CreateCheckoutSessionResponse checkoutsessions(
       Currency currency, BigDecimal kbAmount, String transactionId)
+      throws IOException, ApiException;
+
+  public PaymentRefundResource refund(
+      Currency currency, BigDecimal kbAmount, String transactionId, String paymentPspReference)
       throws IOException, ApiException;
 }

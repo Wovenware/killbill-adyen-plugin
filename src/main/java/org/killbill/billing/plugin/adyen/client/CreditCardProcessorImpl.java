@@ -16,6 +16,7 @@
 package org.killbill.billing.plugin.adyen.client;
 
 import com.adyen.model.checkout.CreateCheckoutSessionResponse;
+import com.adyen.model.checkout.PaymentRefundResource;
 import com.adyen.service.exception.ApiException;
 import java.io.IOException;
 import java.util.Collection;
@@ -95,8 +96,29 @@ public class CreditCardProcessorImpl implements GatewayProcessor {
 
   @Override
   public ProcessorOutputDTO refundPayment(ProcessorInputDTO input) {
+    PaymentRefundResource response = null;
+    try {
+      response =
+          httpClient.refund(
+              input.getCurrency(),
+              input.getAmount(),
+              input.getKbTransactionId(),
+              input.getPspReference());
+    } catch (IOException e) {
+      logger.error("IO Exception{}", e.getMessage(), e);
+      e.printStackTrace();
+    } catch (ApiException e) {
 
-    return null;
+      logger.error("API Exception {} \n {}", e.getError(), e.getMessage(), e);
+      e.printStackTrace();
+    }
+
+    logger.info("the response {}", response);
+    ProcessorOutputDTO outputDTO = new ProcessorOutputDTO();
+    outputDTO.setFirstPaymentReferenceId(response.getReference());
+    outputDTO.setSecondPaymentReferenceId(response.getPspReference());
+
+    return outputDTO;
   }
 
   @Override

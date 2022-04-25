@@ -25,7 +25,6 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 
 @Getter
 @Setter
-@SuppressWarnings("squid:S1068")
 public class ProcessorOutputDTO {
 
   private Map<String, String> additionalData;
@@ -36,5 +35,6 @@ public class ProcessorOutputDTO {
   private String gatewayErrorCode;
   private String firstPaymentReferenceId;
   private String secondPaymentReferenceId;
+  private String pspReferenceCode;
   private DateTime transactionDate;
 }

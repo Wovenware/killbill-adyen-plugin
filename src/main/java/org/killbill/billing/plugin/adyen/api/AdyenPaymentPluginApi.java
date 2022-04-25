@@ -15,6 +15,10 @@
  */
 package org.killbill.billing.plugin.adyen.api;
 
+import com.adyen.model.notification.NotificationRequest;
+import com.adyen.model.notification.NotificationRequestItem;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -42,12 +46,14 @@ import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.plugin.adyen.api.exceptions.PaymentMethodException;
 import org.killbill.billing.plugin.adyen.client.GatewayProcessor;
 import org.killbill.billing.plugin.adyen.client.GatewayProcessorFactory;
+import org.killbill.billing.plugin.adyen.core.AdyenActivator;
 import org.killbill.billing.plugin.adyen.core.AdyenConfigurationHandler;
 import org.killbill.billing.plugin.adyen.dao.AdyenDao;
 import org.killbill.billing.plugin.adyen.dao.gen.tables.AdyenPaymentMethods;
 import org.killbill.billing.plugin.adyen.dao.gen.tables.AdyenResponses;
 import org.killbill.billing.plugin.adyen.dao.gen.tables.records.AdyenPaymentMethodsRecord;
 import org.killbill.billing.plugin.adyen.dao.gen.tables.records.AdyenResponsesRecord;
+import org.killbill.billing.plugin.api.PluginCallContext;
 import org.killbill.billing.plugin.api.PluginProperties;
 import org.killbill.billing.plugin.api.payment.PluginGatewayNotification;
 import org.killbill.billing.plugin.api.payment.PluginHostedPaymentPageFormDescriptor;
@@ -367,41 +373,63 @@ public class AdyenPaymentPluginApi
       throws PaymentPluginApiException {
     logger.info("Refund Payment for account {}", kbAccountId);
     AdyenResponsesRecord adyenRecord = null;
-    String paymentMethodAdditionalData = helper.getPaymentMethodsByMethodId(kbPaymentMethodId);
-    //    if (helper.refundValidations(paymentMethodAdditionalData) != null) {
-    //      return helper.refundValidations(paymentMethodAdditionalData);
-    //    }
 
-    //    try {
-    //      adyenRecord = this.adyenDao.getSuccessfulPurchaseResponse(kbPaymentId,
-    // context.getTenantId());
-    //      if (helper.refundValidations(adyenRecord, amount) != null) {
-    //        return helper.refundValidations(adyenRecord, amount);
-    //      }
-    //      if (adyenRecord.getAmount().compareTo(amount) == 0) {
-    //    	  // is Void
-    //      }
-    //
-    //    } catch (SQLException e) {
-    //      logger.error("[refundPayment]  but we encountered a database error", e);
-    //      return AdyenPaymentTransactionInfoPlugin.cancelPaymentTransactionInfoPlugin(
-    //          TransactionType.REFUND, "[refundPayment] but we encountered a database error");
-    //    }
+    try {
+      adyenRecord = this.adyenDao.getSuccessfulPurchaseResponse(kbPaymentId, context.getTenantId());
+      if (helper.refundValidations(adyenRecord, amount) != null) {
+        return helper.refundValidations(adyenRecord, amount);
+      }
+
+    } catch (SQLException e) {
+      logger.error("[refundPayment]  but we encountered a database error", e);
+      return AdyenPaymentTransactionInfoPlugin.cancelPaymentTransactionInfoPlugin(
+          TransactionType.REFUND, "[refundPayment] but we encountered a database error");
+    }
 
     final Map<String, String> mergedProperties = PluginProperties.toStringMap(properties);
+    GatewayProcessor gatewayProcessor =
+        GatewayProcessorFactory.get(
+            "CC_RECURRING",
+            adyenConfigurationHandler.getConfigurable(context.getTenantId()),
+            null,
+            adyenDao);
+    ProcessorInputDTO input =
+        gatewayProcessor.validateData(
+            adyenConfigurationHandler, mergedProperties, kbPaymentMethodId, kbAccountId);
+    input.setPspReference(adyenRecord.getPspReference());
+    input.setAmount(amount);
+    input.setKbTransactionId(kbTransactionId.toString());
+    input.setCurrency(currency);
+    ProcessorOutputDTO outputDTO = gatewayProcessor.refundPayment(input);
 
+    try {
+      adyenRecord =
+          this.adyenDao.addResponse(
+              kbAccountId,
+              kbPaymentId,
+              kbTransactionId,
+              TransactionType.REFUND,
+              amount,
+              currency,
+              PaymentPluginStatus.PENDING,
+              outputDTO.getFirstPaymentReferenceId(),
+              outputDTO,
+              context.getTenantId());
+    } catch (SQLException e) {
+      logger.error("We encountered a database error ", e);
+    }
     return new AdyenPaymentTransactionInfoPlugin(
-        null,
+        adyenRecord,
         kbPaymentId,
         kbTransactionId,
         TransactionType.REFUND,
         amount,
         currency,
-        PaymentPluginStatus.PROCESSED,
+        PaymentPluginStatus.PENDING,
         null,
         null,
-        kbPaymentMethodId.toString(),
-        null,
+        outputDTO.getFirstPaymentReferenceId(),
+        outputDTO.getSecondPaymentReferenceId(),
         DateTime.now(),
         DateTime.now(),
         null);
@@ -476,6 +504,52 @@ public class AdyenPaymentPluginApi
       final CallContext context)
       throws PaymentPluginApiException {
     logger.info("Notification recieved");
+    ObjectMapper objectMapper = new ObjectMapper();
+    try {
+ 
+      NotificationRequest notificationRequest =
+          objectMapper.readValue(notification, NotificationRequest.class);
+      NotificationRequestItem notificationItem = notificationRequest.getNotificationItems().get(0);
+      logger.info("request is  {}", notificationRequest);
+      AdyenResponsesRecord record =
+          adyenDao.getResponseFromMerchantReference(notificationItem.getMerchantReference());
+      final CallContext tempContext =
+          new PluginCallContext(
+              AdyenActivator.PLUGIN_NAME,
+              clock.getUTCNow(),
+              UUID.fromString(record.getKbAccountId()),
+              UUID.fromString(record.getKbTenantId()));
+      Account account =
+          this.killbillAPI
+              .getAccountUserApi()
+              .getAccountById(UUID.fromString(record.getKbAccountId()), tempContext);
+      this.killbillAPI
+          .getPaymentApi()
+          .notifyPendingTransactionOfStateChanged(
+              account,
+              UUID.fromString(record.getKbPaymentTransactionId()),
+              notificationItem.isSuccess(),
+              tempContext);
+      ProcessorOutputDTO outputDTO = new ProcessorOutputDTO();
+      outputDTO.setPspReferenceCode(notificationItem.getPspReference());
+      if (notificationItem.isSuccess()) {
+        outputDTO.setStatus(PaymentPluginStatus.PROCESSED);
+      } else {
+        outputDTO.setStatus(PaymentPluginStatus.ERROR);
+      }
+      this.adyenDao.updateResponse(
+          UUID.fromString(record.getKbPaymentId()),
+          outputDTO,
+          UUID.fromString(record.getKbTenantId()));
+      this.adyenDao.addNotification(
+          UUID.fromString(record.getKbAccountId()),
+          UUID.fromString(record.getKbPaymentId()),
+          UUID.fromString(record.getKbPaymentTransactionId()),
+          notificationItem,
+          UUID.fromString(record.getKbTenantId()));
+    } catch (JsonProcessingException | PaymentApiException | SQLException | AccountApiException e) {
+      e.printStackTrace();
+    }
     return new PluginGatewayNotification("[accepted]");
   }
 

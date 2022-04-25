@@ -41,6 +41,8 @@ public class ProcessorInputDTO {
 
   private String kbTransactionId;
 
+  private String pspReference;
+
   private LocalDate salesDate;
 
   private PaymentMethod paymentMethod;

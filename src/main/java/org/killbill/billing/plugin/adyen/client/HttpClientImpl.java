@@ -20,6 +20,8 @@ import com.adyen.enums.Environment;
 import com.adyen.model.Amount;
 import com.adyen.model.checkout.CreateCheckoutSessionRequest;
 import com.adyen.model.checkout.CreateCheckoutSessionResponse;
+import com.adyen.model.checkout.CreatePaymentRefundRequest;
+import com.adyen.model.checkout.PaymentRefundResource;
 import com.adyen.service.Checkout;
 import com.adyen.service.exception.ApiException;
 import java.io.IOException;
@@ -53,5 +55,18 @@ public class HttpClientImpl implements HttpClient {
     checkoutSession.setCountryCode("US");
 
     return checkout.sessions(checkoutSession);
+  }
+
+  @Override
+  public PaymentRefundResource refund(
+      Currency currency, BigDecimal kbAmount, String transactionId, String paymentPspReference)
+      throws IOException, ApiException {
+
+    CreatePaymentRefundRequest paymentRefundRequest = new CreatePaymentRefundRequest();
+    Amount amount = new Amount().currency(currency.name()).value(kbAmount.longValue());
+    paymentRefundRequest.setAmount(amount);
+    paymentRefundRequest.setMerchantAccount(adyenConfigProperties.getMerchantAccount());
+    paymentRefundRequest.setReference(transactionId);
+    return checkout.paymentsRefunds(paymentPspReference, paymentRefundRequest);
   }
 }

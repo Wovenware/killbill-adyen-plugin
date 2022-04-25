@@ -21,13 +21,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import org.killbill.billing.osgi.libs.killbill.OSGIKillbillAPI;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.plugin.adyen.dao.AdyenDao;
-import org.killbill.billing.plugin.adyen.dao.gen.tables.records.AdyenPaymentMethodsRecord;
 import org.killbill.billing.plugin.adyen.dao.gen.tables.records.AdyenResponsesRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,20 +68,6 @@ public class AdyenPaymentPluginApiHelper {
       logger.error("", e);
     }
     return Collections.emptyMap();
-  }
-
-  public String getPaymentMethodsByMethodId(UUID kbPaymentMethodId) {
-    try {
-      AdyenPaymentMethodsRecord methodRecord =
-          this.adyenDao.getPaymentMethodsByMethodId(kbPaymentMethodId);
-      if (PaymentMethodStatus.NOT_VALID.name().equals(methodRecord.getState())) {
-        return PaymentMethodStatus.NOT_VALID.name();
-      }
-      return methodRecord.getAdditionalData();
-    } catch (Exception e1) {
-      logger.error("", e1);
-      return null;
-    }
   }
 
   //  public void storeRequest(

@@ -18,14 +18,13 @@ package org.killbill.billing.plugin.adyen.core.resources;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import java.util.Optional;
 import java.util.UUID;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import org.jooby.MediaType;
 import org.jooby.Result;
 import org.jooby.Results;
-import org.jooby.Status;
-import org.jooby.mvc.Local;
+import org.jooby.mvc.Body;
 import org.jooby.mvc.POST;
 import org.jooby.mvc.Path;
 import org.killbill.billing.osgi.libs.killbill.OSGIKillbillClock;
@@ -35,13 +34,14 @@ import org.killbill.billing.plugin.adyen.api.AdyenPaymentPluginApi;
 import org.killbill.billing.plugin.adyen.core.AdyenActivator;
 import org.killbill.billing.plugin.api.PluginCallContext;
 import org.killbill.billing.plugin.core.resources.PluginHealthcheck;
-import org.killbill.billing.tenant.api.Tenant;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 @Path("/notification")
 public class AdyenNotificationServlet extends PluginHealthcheck {
-
+  private static final Logger logger = LoggerFactory.getLogger(AdyenNotificationServlet.class);
   private final OSGIKillbillClock clock;
   private final AdyenPaymentPluginApi adyenPaymentPluginApi;
 
@@ -53,18 +53,23 @@ public class AdyenNotificationServlet extends PluginHealthcheck {
   }
 
   @POST
-  public Result notificate(
-      @Named("kbAccountId") final UUID kbAccountId,
-      @Named("notification") final String notification,
-      @Local @Named("killbill_tenant") final Tenant tenant)
+  public Result notificate( @Body String body)
       throws PaymentPluginApiException {
+    logger.info("start notificate");
     final CallContext context =
         new PluginCallContext(
-            AdyenActivator.PLUGIN_NAME, clock.getClock().getUTCNow(), kbAccountId, tenant.getId());
-    return Results.with(
-            adyenPaymentPluginApi.processNotification(
-                notification, ImmutableList.<PluginProperty>of(), context),
-            Status.CREATED)
-        .type(MediaType.json);
+            AdyenActivator.PLUGIN_NAME,
+            clock.getClock().getUTCNow(),
+            UUID.randomUUID(),
+            UUID.randomUUID());
+    logger.info("start result of notificate");
+ 
+    return Results.ok(
+        adyenPaymentPluginApi
+            .processNotification(
+                body,
+                null,
+                context)
+            .getEntity());
   }
 }
