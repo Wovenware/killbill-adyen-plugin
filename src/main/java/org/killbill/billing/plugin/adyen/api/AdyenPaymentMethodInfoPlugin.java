@@ -29,7 +29,7 @@ public class AdyenPaymentMethodInfoPlugin extends PluginPaymentMethodInfoPlugin 
         UUID.fromString(adyenPaymentMethodsRecord.getKbAccountId()),
         UUID.fromString(adyenPaymentMethodsRecord.getKbPaymentMethodId()),
         adyenPaymentMethodsRecord.getIsDefault() == PluginDao.TRUE,
-        adyenPaymentMethodsRecord.getToken());
+        null);
   }
 
   public AdyenPaymentMethodInfoPlugin(

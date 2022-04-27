@@ -11,6 +11,7 @@ import org.jooq.ForeignKey;
 import org.jooq.Identity;
 import org.jooq.Name;
 import org.jooq.Record;
+import org.jooq.Row11;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -55,155 +56,11 @@ public class AdyenPaymentMethods extends TableImpl<AdyenPaymentMethodsRecord> {
   public final TableField<AdyenPaymentMethodsRecord, String> KB_PAYMENT_METHOD_ID =
       createField(DSL.name("kb_payment_method_id"), SQLDataType.CHAR(36).nullable(false), this, "");
 
-  /** The column <code>killbill.adyen_payment_methods.token</code>. */
-  public final TableField<AdyenPaymentMethodsRecord, String> TOKEN =
+  /** The column <code>killbill.adyen_payment_methods.is_recurring</code>. */
+  public final TableField<AdyenPaymentMethodsRecord, Short> IS_RECURRING =
       createField(
-          DSL.name("token"),
-          SQLDataType.VARCHAR(255).defaultValue(DSL.inline("NULL", SQLDataType.VARCHAR)),
-          this,
-          "");
-
-  /** The column <code>killbill.adyen_payment_methods.cc_first_name</code>. */
-  public final TableField<AdyenPaymentMethodsRecord, String> CC_FIRST_NAME =
-      createField(
-          DSL.name("cc_first_name"),
-          SQLDataType.VARCHAR(255).defaultValue(DSL.inline("NULL", SQLDataType.VARCHAR)),
-          this,
-          "");
-
-  /** The column <code>killbill.adyen_payment_methods.cc_last_name</code>. */
-  public final TableField<AdyenPaymentMethodsRecord, String> CC_LAST_NAME =
-      createField(
-          DSL.name("cc_last_name"),
-          SQLDataType.VARCHAR(255).defaultValue(DSL.inline("NULL", SQLDataType.VARCHAR)),
-          this,
-          "");
-
-  /** The column <code>killbill.adyen_payment_methods.cc_type</code>. */
-  public final TableField<AdyenPaymentMethodsRecord, String> CC_TYPE =
-      createField(
-          DSL.name("cc_type"),
-          SQLDataType.VARCHAR(255).defaultValue(DSL.inline("NULL", SQLDataType.VARCHAR)),
-          this,
-          "");
-
-  /** The column <code>killbill.adyen_payment_methods.cc_exp_month</code>. */
-  public final TableField<AdyenPaymentMethodsRecord, String> CC_EXP_MONTH =
-      createField(
-          DSL.name("cc_exp_month"),
-          SQLDataType.VARCHAR(255).defaultValue(DSL.inline("NULL", SQLDataType.VARCHAR)),
-          this,
-          "");
-
-  /** The column <code>killbill.adyen_payment_methods.cc_exp_year</code>. */
-  public final TableField<AdyenPaymentMethodsRecord, String> CC_EXP_YEAR =
-      createField(
-          DSL.name("cc_exp_year"),
-          SQLDataType.VARCHAR(255).defaultValue(DSL.inline("NULL", SQLDataType.VARCHAR)),
-          this,
-          "");
-
-  /** The column <code>killbill.adyen_payment_methods.cc_number</code>. */
-  public final TableField<AdyenPaymentMethodsRecord, String> CC_NUMBER =
-      createField(
-          DSL.name("cc_number"),
-          SQLDataType.VARCHAR(255).defaultValue(DSL.inline("NULL", SQLDataType.VARCHAR)),
-          this,
-          "");
-
-  /** The column <code>killbill.adyen_payment_methods.cc_last_4</code>. */
-  public final TableField<AdyenPaymentMethodsRecord, String> CC_LAST_4 =
-      createField(
-          DSL.name("cc_last_4"),
-          SQLDataType.VARCHAR(255).defaultValue(DSL.inline("NULL", SQLDataType.VARCHAR)),
-          this,
-          "");
-
-  /** The column <code>killbill.adyen_payment_methods.cc_start_month</code>. */
-  public final TableField<AdyenPaymentMethodsRecord, String> CC_START_MONTH =
-      createField(
-          DSL.name("cc_start_month"),
-          SQLDataType.VARCHAR(255).defaultValue(DSL.inline("NULL", SQLDataType.VARCHAR)),
-          this,
-          "");
-
-  /** The column <code>killbill.adyen_payment_methods.cc_start_year</code>. */
-  public final TableField<AdyenPaymentMethodsRecord, String> CC_START_YEAR =
-      createField(
-          DSL.name("cc_start_year"),
-          SQLDataType.VARCHAR(255).defaultValue(DSL.inline("NULL", SQLDataType.VARCHAR)),
-          this,
-          "");
-
-  /** The column <code>killbill.adyen_payment_methods.cc_issue_number</code>. */
-  public final TableField<AdyenPaymentMethodsRecord, String> CC_ISSUE_NUMBER =
-      createField(
-          DSL.name("cc_issue_number"),
-          SQLDataType.VARCHAR(255).defaultValue(DSL.inline("NULL", SQLDataType.VARCHAR)),
-          this,
-          "");
-
-  /** The column <code>killbill.adyen_payment_methods.cc_verification_value</code>. */
-  public final TableField<AdyenPaymentMethodsRecord, String> CC_VERIFICATION_VALUE =
-      createField(
-          DSL.name("cc_verification_value"),
-          SQLDataType.VARCHAR(255).defaultValue(DSL.inline("NULL", SQLDataType.VARCHAR)),
-          this,
-          "");
-
-  /** The column <code>killbill.adyen_payment_methods.cc_track_data</code>. */
-  public final TableField<AdyenPaymentMethodsRecord, String> CC_TRACK_DATA =
-      createField(
-          DSL.name("cc_track_data"),
-          SQLDataType.VARCHAR(255).defaultValue(DSL.inline("NULL", SQLDataType.VARCHAR)),
-          this,
-          "");
-
-  /** The column <code>killbill.adyen_payment_methods.address1</code>. */
-  public final TableField<AdyenPaymentMethodsRecord, String> ADDRESS1 =
-      createField(
-          DSL.name("address1"),
-          SQLDataType.VARCHAR(255).defaultValue(DSL.inline("NULL", SQLDataType.VARCHAR)),
-          this,
-          "");
-
-  /** The column <code>killbill.adyen_payment_methods.address2</code>. */
-  public final TableField<AdyenPaymentMethodsRecord, String> ADDRESS2 =
-      createField(
-          DSL.name("address2"),
-          SQLDataType.VARCHAR(255).defaultValue(DSL.inline("NULL", SQLDataType.VARCHAR)),
-          this,
-          "");
-
-  /** The column <code>killbill.adyen_payment_methods.city</code>. */
-  public final TableField<AdyenPaymentMethodsRecord, String> CITY =
-      createField(
-          DSL.name("city"),
-          SQLDataType.VARCHAR(255).defaultValue(DSL.inline("NULL", SQLDataType.VARCHAR)),
-          this,
-          "");
-
-  /** The column <code>killbill.adyen_payment_methods.state</code>. */
-  public final TableField<AdyenPaymentMethodsRecord, String> STATE =
-      createField(
-          DSL.name("state"),
-          SQLDataType.VARCHAR(255).defaultValue(DSL.inline("NULL", SQLDataType.VARCHAR)),
-          this,
-          "");
-
-  /** The column <code>killbill.adyen_payment_methods.zip</code>. */
-  public final TableField<AdyenPaymentMethodsRecord, String> ZIP =
-      createField(
-          DSL.name("zip"),
-          SQLDataType.VARCHAR(255).defaultValue(DSL.inline("NULL", SQLDataType.VARCHAR)),
-          this,
-          "");
-
-  /** The column <code>killbill.adyen_payment_methods.country</code>. */
-  public final TableField<AdyenPaymentMethodsRecord, String> COUNTRY =
-      createField(
-          DSL.name("country"),
-          SQLDataType.VARCHAR(255).defaultValue(DSL.inline("NULL", SQLDataType.VARCHAR)),
+          DSL.name("is_recurring"),
+          SQLDataType.SMALLINT.nullable(false).defaultValue(DSL.inline("0", SQLDataType.SMALLINT)),
           this,
           "");
 
@@ -242,6 +99,14 @@ public class AdyenPaymentMethods extends TableImpl<AdyenPaymentMethodsRecord> {
   /** The column <code>killbill.adyen_payment_methods.kb_tenant_id</code>. */
   public final TableField<AdyenPaymentMethodsRecord, String> KB_TENANT_ID =
       createField(DSL.name("kb_tenant_id"), SQLDataType.CHAR(36).nullable(false), this, "");
+
+  /** The column <code>killbill.adyen_payment_methods.recurring_detail_reference</code>. */
+  public final TableField<AdyenPaymentMethodsRecord, String> RECURRING_DETAIL_REFERENCE =
+      createField(
+          DSL.name("recurring_detail_reference"),
+          SQLDataType.CHAR(36).defaultValue(DSL.inline("NULL", SQLDataType.CHAR)),
+          this,
+          "");
 
   private AdyenPaymentMethods(Name alias, Table<AdyenPaymentMethodsRecord> aliased) {
     this(alias, aliased, null);
@@ -315,5 +180,26 @@ public class AdyenPaymentMethods extends TableImpl<AdyenPaymentMethodsRecord> {
   @Override
   public AdyenPaymentMethods rename(Name name) {
     return new AdyenPaymentMethods(name, null);
+  }
+
+  // -------------------------------------------------------------------------
+  // Row11 type methods
+  // -------------------------------------------------------------------------
+
+  @Override
+  public Row11<
+          ULong,
+          String,
+          String,
+          Short,
+          Short,
+          Short,
+          String,
+          LocalDateTime,
+          LocalDateTime,
+          String,
+          String>
+      fieldsRow() {
+    return (Row11) super.fieldsRow();
   }
 }

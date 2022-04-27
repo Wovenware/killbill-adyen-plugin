@@ -18,11 +18,9 @@ package org.killbill.billing.plugin.adyen;
 
 import com.google.common.collect.ImmutableList;
 import java.math.BigDecimal;
-import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import org.apache.hc.client5.http.ClientProtocolException;
 import org.junit.Assert;
 import org.junit.Test;
 import org.killbill.billing.osgi.api.Healthcheck;
@@ -30,7 +28,6 @@ import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PaymentTransaction;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.plugin.api.PaymentMethodInfoPlugin;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
@@ -39,9 +36,6 @@ import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.plugin.TestUtils;
 import org.killbill.billing.plugin.adyen.api.AdyenPaymentMethodInfoPlugin;
 import org.killbill.billing.plugin.adyen.api.AdyenPaymentMethodPlugin;
-import org.killbill.billing.plugin.adyen.client.DefaultGatewayProcessor;
-import org.killbill.billing.plugin.adyen.client.GatewayProcessor;
-import org.killbill.billing.plugin.adyen.client.exceptions.ConnectionException;
 import org.killbill.billing.plugin.adyen.core.AdyenHealthcheck;
 import org.killbill.billing.plugin.adyen.dao.gen.tables.records.AdyenPaymentMethodsRecord;
 import org.slf4j.Logger;
@@ -97,48 +91,6 @@ public class AdyenPaymentPluginApiTest extends TestBase {
     Assert.assertEquals(1, syncPaymentMethods(kbAccountId).size());
     adyenPaymentPluginApi.deletePaymentMethod(kbAccountId, kbPaymentMethodId, null, context);
     Assert.assertEquals(0, syncPaymentMethods(kbAccountId).size());
-  }
-
-  @Test
-  public void testSuccessfulPurchase() throws PaymentPluginApiException, PaymentApiException {
-
-    final UUID kbAccountId = account.getId();
-
-    Assert.assertEquals(0, syncPaymentMethods(kbAccountId).size());
-    final UUID kbPaymentMethodId = UUID.randomUUID();
-    AdyenPaymentMethodPlugin AdyenPaymentMethodPlugin =
-        new AdyenPaymentMethodPlugin(
-            kbPaymentMethodId, kbPaymentMethodId.toString(), true, ImmutableList.of());
-
-    adyenPaymentPluginApi.addPaymentMethod(
-        kbAccountId,
-        kbPaymentMethodId,
-        AdyenPaymentMethodPlugin,
-        true,
-        ImmutableList.of(),
-        context);
-
-    final Payment payment =
-        TestUtils.buildPayment(kbAccountId, kbPaymentMethodId, account.getCurrency(), killbillApi);
-
-    final PaymentTransaction purchaseTransaction =
-        TestUtils.buildPaymentTransaction(
-            payment, TransactionType.PURCHASE, BigDecimal.TEN, payment.getCurrency());
-
-    final PaymentTransactionInfoPlugin purchaseInfoPlugin =
-        adyenPaymentPluginApi.purchasePayment(
-            kbAccountId,
-            payment.getId(),
-            purchaseTransaction.getId(),
-            kbPaymentMethodId,
-            purchaseTransaction.getAmount(),
-            purchaseTransaction.getCurrency(),
-            ImmutableList.of(),
-            context);
-
-    TestUtils.updatePaymentTransaction(purchaseTransaction, purchaseInfoPlugin);
-    verifyPaymentTransactionInfoPlugin(
-        payment, purchaseTransaction, purchaseInfoPlugin, PaymentPluginStatus.PROCESSED);
   }
 
   @Test
@@ -269,254 +221,6 @@ public class AdyenPaymentPluginApiTest extends TestBase {
   }
 
   @Test
-  public void testSuccessfulPurchaseRefund() throws PaymentPluginApiException, PaymentApiException {
-
-    final UUID kbAccountId = account.getId();
-
-    Assert.assertEquals(0, syncPaymentMethods(kbAccountId).size());
-    final UUID kbPaymentMethodId = UUID.randomUUID();
-    AdyenPaymentMethodPlugin AdyenPaymentMethodPlugin =
-        new AdyenPaymentMethodPlugin(
-            kbPaymentMethodId, kbPaymentMethodId.toString(), true, ImmutableList.of());
-
-    adyenPaymentPluginApi.addPaymentMethod(
-        kbAccountId,
-        kbPaymentMethodId,
-        AdyenPaymentMethodPlugin,
-        true,
-        ImmutableList.of(),
-        context);
-
-    final Payment payment =
-        TestUtils.buildPayment(kbAccountId, kbPaymentMethodId, account.getCurrency(), killbillApi);
-
-    final PaymentTransaction purchaseTransaction =
-        TestUtils.buildPaymentTransaction(
-            payment, TransactionType.PURCHASE, BigDecimal.valueOf(300), payment.getCurrency());
-
-    final PaymentTransactionInfoPlugin purchaseInfoPlugin =
-        adyenPaymentPluginApi.purchasePayment(
-            kbAccountId,
-            payment.getId(),
-            purchaseTransaction.getId(),
-            kbPaymentMethodId,
-            purchaseTransaction.getAmount(),
-            purchaseTransaction.getCurrency(),
-            ImmutableList.of(),
-            context);
-    TestUtils.updatePaymentTransaction(purchaseTransaction, purchaseInfoPlugin);
-    verifyPaymentTransactionInfoPlugin(
-        payment, purchaseTransaction, purchaseInfoPlugin, PaymentPluginStatus.PROCESSED);
-    final PaymentTransaction refundTransaction =
-        TestUtils.buildPaymentTransaction(
-            payment, TransactionType.REFUND, BigDecimal.TEN, payment.getCurrency());
-
-    final PaymentTransactionInfoPlugin refundInfoPlugin =
-        adyenPaymentPluginApi.refundPayment(
-            kbAccountId,
-            payment.getId(),
-            refundTransaction.getId(),
-            kbPaymentMethodId,
-            refundTransaction.getAmount(),
-            refundTransaction.getCurrency(),
-            ImmutableList.of(),
-            context);
-    System.out.println(refundInfoPlugin);
-    TestUtils.updatePaymentTransaction(refundTransaction, refundInfoPlugin);
-    verifyPaymentTransactionInfoPlugin(
-        payment, refundTransaction, refundInfoPlugin, PaymentPluginStatus.PROCESSED);
-  }
-
-  @Test
-  public void testPurchaseRefundWithEqualAmount()
-      throws PaymentPluginApiException, PaymentApiException {
-
-    final UUID kbAccountId = account.getId();
-
-    Assert.assertEquals(0, syncPaymentMethods(kbAccountId).size());
-    final UUID kbPaymentMethodId = UUID.randomUUID();
-    AdyenPaymentMethodPlugin AdyenPaymentMethodPlugin =
-        new AdyenPaymentMethodPlugin(
-            kbPaymentMethodId, kbPaymentMethodId.toString(), true, ImmutableList.of());
-
-    adyenPaymentPluginApi.addPaymentMethod(
-        kbAccountId,
-        kbPaymentMethodId,
-        AdyenPaymentMethodPlugin,
-        true,
-        ImmutableList.of(),
-        context);
-
-    final Payment payment =
-        TestUtils.buildPayment(kbAccountId, kbPaymentMethodId, account.getCurrency(), killbillApi);
-
-    final PaymentTransaction purchaseTransaction =
-        TestUtils.buildPaymentTransaction(
-            payment, TransactionType.PURCHASE, BigDecimal.TEN, payment.getCurrency());
-
-    final PaymentTransactionInfoPlugin purchaseInfoPlugin =
-        adyenPaymentPluginApi.purchasePayment(
-            kbAccountId,
-            payment.getId(),
-            purchaseTransaction.getId(),
-            kbPaymentMethodId,
-            purchaseTransaction.getAmount(),
-            purchaseTransaction.getCurrency(),
-            ImmutableList.of(),
-            context);
-    TestUtils.updatePaymentTransaction(purchaseTransaction, purchaseInfoPlugin);
-    verifyPaymentTransactionInfoPlugin(
-        payment, purchaseTransaction, purchaseInfoPlugin, PaymentPluginStatus.PROCESSED);
-    final PaymentTransaction refundTransaction =
-        TestUtils.buildPaymentTransaction(
-            payment, TransactionType.REFUND, BigDecimal.TEN, payment.getCurrency());
-
-    final PaymentTransactionInfoPlugin refundInfoPlugin =
-        adyenPaymentPluginApi.refundPayment(
-            kbAccountId,
-            payment.getId(),
-            refundTransaction.getId(),
-            kbPaymentMethodId,
-            refundTransaction.getAmount(),
-            refundTransaction.getCurrency(),
-            ImmutableList.of(),
-            context);
-    TestUtils.updatePaymentTransaction(refundTransaction, refundInfoPlugin);
-    verifyPaymentTransactionInfoPlugin(
-        payment, refundTransaction, refundInfoPlugin, PaymentPluginStatus.PROCESSED);
-  }
-
-  @Test
-  public void testPurchaseRefundWithWrongRefundAmount()
-      throws PaymentPluginApiException, PaymentApiException {
-
-    final UUID kbAccountId = account.getId();
-
-    Assert.assertEquals(0, syncPaymentMethods(kbAccountId).size());
-    final UUID kbPaymentMethodId = UUID.randomUUID();
-    AdyenPaymentMethodPlugin AdyenPaymentMethodPlugin =
-        new AdyenPaymentMethodPlugin(
-            kbPaymentMethodId, kbPaymentMethodId.toString(), true, ImmutableList.of());
-
-    adyenPaymentPluginApi.addPaymentMethod(
-        kbAccountId,
-        kbPaymentMethodId,
-        AdyenPaymentMethodPlugin,
-        true,
-        ImmutableList.of(),
-        context);
-
-    final Payment payment =
-        TestUtils.buildPayment(kbAccountId, kbPaymentMethodId, account.getCurrency(), killbillApi);
-
-    final PaymentTransaction purchaseTransaction =
-        TestUtils.buildPaymentTransaction(
-            payment, TransactionType.PURCHASE, BigDecimal.TEN, payment.getCurrency());
-
-    final PaymentTransactionInfoPlugin purchaseInfoPlugin =
-        adyenPaymentPluginApi.purchasePayment(
-            kbAccountId,
-            payment.getId(),
-            purchaseTransaction.getId(),
-            kbPaymentMethodId,
-            purchaseTransaction.getAmount(),
-            purchaseTransaction.getCurrency(),
-            ImmutableList.of(),
-            context);
-    TestUtils.updatePaymentTransaction(purchaseTransaction, purchaseInfoPlugin);
-    verifyPaymentTransactionInfoPlugin(
-        payment, purchaseTransaction, purchaseInfoPlugin, PaymentPluginStatus.PROCESSED);
-    final PaymentTransaction refundTransaction =
-        TestUtils.buildPaymentTransaction(
-            payment, TransactionType.REFUND, BigDecimal.valueOf(200), payment.getCurrency());
-
-    final PaymentTransactionInfoPlugin refundInfoPlugin =
-        adyenPaymentPluginApi.refundPayment(
-            kbAccountId,
-            payment.getId(),
-            refundTransaction.getId(),
-            kbPaymentMethodId,
-            refundTransaction.getAmount(),
-            refundTransaction.getCurrency(),
-            ImmutableList.of(),
-            context);
-    TestUtils.updatePaymentTransaction(refundTransaction, refundInfoPlugin);
-  }
-
-  @Test
-  public void testPurchaseRefundWithRefundAmountZero()
-      throws PaymentPluginApiException, PaymentApiException {
-
-    final UUID kbAccountId = account.getId();
-
-    Assert.assertEquals(0, syncPaymentMethods(kbAccountId).size());
-    final UUID kbPaymentMethodId = UUID.randomUUID();
-    AdyenPaymentMethodPlugin AdyenPaymentMethodPlugin =
-        new AdyenPaymentMethodPlugin(
-            kbPaymentMethodId, kbPaymentMethodId.toString(), true, ImmutableList.of());
-
-    adyenPaymentPluginApi.addPaymentMethod(
-        kbAccountId,
-        kbPaymentMethodId,
-        AdyenPaymentMethodPlugin,
-        true,
-        ImmutableList.of(),
-        context);
-
-    final Payment payment =
-        TestUtils.buildPayment(kbAccountId, kbPaymentMethodId, account.getCurrency(), killbillApi);
-
-    final PaymentTransaction purchaseTransaction =
-        TestUtils.buildPaymentTransaction(
-            payment, TransactionType.PURCHASE, BigDecimal.TEN, payment.getCurrency());
-
-    final PaymentTransactionInfoPlugin purchaseInfoPlugin =
-        adyenPaymentPluginApi.purchasePayment(
-            kbAccountId,
-            payment.getId(),
-            purchaseTransaction.getId(),
-            kbPaymentMethodId,
-            purchaseTransaction.getAmount(),
-            purchaseTransaction.getCurrency(),
-            ImmutableList.of(),
-            context);
-    TestUtils.updatePaymentTransaction(purchaseTransaction, purchaseInfoPlugin);
-    verifyPaymentTransactionInfoPlugin(
-        payment, purchaseTransaction, purchaseInfoPlugin, PaymentPluginStatus.PROCESSED);
-    final PaymentTransaction refundTransaction =
-        TestUtils.buildPaymentTransaction(
-            payment, TransactionType.REFUND, BigDecimal.ZERO, payment.getCurrency());
-
-    final PaymentTransactionInfoPlugin refundInfoPlugin =
-        adyenPaymentPluginApi.refundPayment(
-            kbAccountId,
-            payment.getId(),
-            refundTransaction.getId(),
-            kbPaymentMethodId,
-            refundTransaction.getAmount(),
-            refundTransaction.getCurrency(),
-            ImmutableList.of(),
-            context);
-    TestUtils.updatePaymentTransaction(refundTransaction, refundInfoPlugin);
-
-    Assert.assertEquals(PaymentPluginStatus.CANCELED, refundInfoPlugin.getStatus());
-  }
-
-  @Test
-  public void testBuildFormDescriptor() throws PaymentPluginApiException {
-    final UUID kbAccountId = account.getId();
-    adyenPaymentPluginApi.buildFormDescriptor(
-        kbAccountId, null, ImmutableList.of(new PluginProperty("amount", 10, false)), context);
-  }
-
-  @Test
-  public void testProcessNotification() throws PaymentPluginApiException {
-    Assert.assertThrows(
-        PaymentPluginApiException.class,
-        () -> adyenPaymentPluginApi.processNotification(DEFAULT_COUNTRY, null, context));
-  }
-
-  @Test
   public void testGetPaymentMethodDetail() throws PaymentPluginApiException {
     final UUID kbAccountId = account.getId();
 
@@ -546,61 +250,6 @@ public class AdyenPaymentPluginApiTest extends TestBase {
   public void testHealthcheck() {
     final Healthcheck healthcheck = new AdyenHealthcheck();
     Assert.assertTrue(healthcheck.getHealthStatus(null, null).isHealthy());
-  }
-
-  @Test
-  public void testDefaultGatewayProcessor()
-      throws PaymentPluginApiException, GeneralSecurityException, ConnectionException,
-          ClientProtocolException {
-    GatewayProcessor processor = new DefaultGatewayProcessor();
-    Assert.assertEquals(null, processor.getPaymentInfo(null));
-    Assert.assertEquals(null, processor.getPaymentMethodDetail(null));
-    Assert.assertEquals(null, processor.processOneTimePayment(null));
-    Assert.assertEquals(null, processor.processPayment(null));
-    Assert.assertEquals(null, processor.refundPayment(null));
-    Assert.assertEquals(null, processor.validateData(null, null, null, null));
-  }
-
-  @Test
-  public void testGetPaymentInfo() throws PaymentPluginApiException, PaymentApiException {
-    final UUID kbAccountId = account.getId();
-
-    Assert.assertEquals(0, syncPaymentMethods(kbAccountId).size());
-    final UUID kbPaymentMethodId = UUID.randomUUID();
-    AdyenPaymentMethodPlugin AdyenPaymentMethodPlugin =
-        new AdyenPaymentMethodPlugin(
-            kbPaymentMethodId, kbPaymentMethodId.toString(), true, ImmutableList.of());
-
-    adyenPaymentPluginApi.addPaymentMethod(
-        kbAccountId,
-        kbPaymentMethodId,
-        AdyenPaymentMethodPlugin,
-        true,
-        ImmutableList.of(),
-        context);
-
-    final Payment payment =
-        TestUtils.buildPayment(kbAccountId, kbPaymentMethodId, account.getCurrency(), killbillApi);
-
-    final PaymentTransaction purchaseTransaction =
-        TestUtils.buildPaymentTransaction(
-            payment, TransactionType.PURCHASE, BigDecimal.TEN, payment.getCurrency());
-
-    final PaymentTransactionInfoPlugin purchaseInfoPlugin =
-        adyenPaymentPluginApi.purchasePayment(
-            kbAccountId,
-            payment.getId(),
-            purchaseTransaction.getId(),
-            kbPaymentMethodId,
-            purchaseTransaction.getAmount(),
-            purchaseTransaction.getCurrency(),
-            ImmutableList.of(),
-            context);
-
-    TestUtils.updatePaymentTransaction(purchaseTransaction, purchaseInfoPlugin);
-    verifyPaymentTransactionInfoPlugin(
-        payment, purchaseTransaction, purchaseInfoPlugin, PaymentPluginStatus.PROCESSED);
-    adyenPaymentPluginApi.getPaymentInfo(kbAccountId, payment.getId(), null, context);
   }
 
   @Test

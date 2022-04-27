@@ -17,6 +17,6 @@
 package org.killbill.billing.plugin.adyen.api;
 
 public enum PaymentMethod {
-  CC_RECURRING,
-  CC_ONE_TIME
+  RECURRING,
+  ONE_TIME
 }

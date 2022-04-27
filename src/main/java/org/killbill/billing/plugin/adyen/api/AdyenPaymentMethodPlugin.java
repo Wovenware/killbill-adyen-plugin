@@ -29,11 +29,10 @@ public class AdyenPaymentMethodPlugin extends PluginPaymentMethodPlugin {
 
   public static AdyenPaymentMethodPlugin build(
       final AdyenPaymentMethodsRecord adyenPaymentMethodsRecord) {
-    final String externalPaymentMethodId = adyenPaymentMethodsRecord.getToken();
 
     return new AdyenPaymentMethodPlugin(
         UUID.fromString(adyenPaymentMethodsRecord.getKbPaymentMethodId()),
-        externalPaymentMethodId,
+        null,
         adyenPaymentMethodsRecord.getIsDefault() == PluginDao.TRUE,
         PluginProperties.buildPluginProperties(
             AdyenDao.mapFromAdditionalDataString(adyenPaymentMethodsRecord.getAdditionalData())));

@@ -15,25 +15,15 @@
  */
 package org.killbill.billing.plugin.adyen.client;
 
-import org.killbill.billing.plugin.adyen.api.AdyenPaymentPluginApi.Callback;
-import org.killbill.billing.plugin.adyen.api.PaymentMethod;
 import org.killbill.billing.plugin.adyen.core.AdyenConfigProperties;
 import org.killbill.billing.plugin.adyen.dao.AdyenDao;
 
 public class GatewayProcessorFactory {
   private GatewayProcessorFactory() {}
 
-  public static GatewayProcessor get(
-      String paymentMethod,
-      AdyenConfigProperties adyenConfigProperties,
-      Callback callback,
-      AdyenDao dao) {
+  public static GatewayProcessor get(AdyenConfigProperties adyenConfigProperties, AdyenDao dao) {
     HttpClientImpl httpClient = new HttpClientImpl(adyenConfigProperties);
-    if (PaymentMethod.CC_ONE_TIME.toString().equals(paymentMethod)
-        || PaymentMethod.CC_RECURRING.toString().equals(paymentMethod)) {
-      return new CreditCardProcessorImpl(httpClient, adyenConfigProperties, callback, dao);
-    }
 
-    return new DefaultGatewayProcessor();
+    return new AdyenProcessorImpl(httpClient, adyenConfigProperties);
   }
 }

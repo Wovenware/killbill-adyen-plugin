@@ -38,7 +38,6 @@ import org.jooq.impl.DSL;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
-import org.killbill.billing.plugin.adyen.api.PaymentMethodStatus;
 import org.killbill.billing.plugin.adyen.api.ProcessorOutputDTO;
 import org.killbill.billing.plugin.adyen.client.exceptions.FormaterException;
 import org.killbill.billing.plugin.adyen.dao.gen.tables.AdyenPaymentMethods;
@@ -51,7 +50,6 @@ import org.killbill.billing.plugin.dao.payment.PluginPaymentDao;
 public class AdyenDao
     extends PluginPaymentDao<
         AdyenResponsesRecord, AdyenResponses, AdyenPaymentMethodsRecord, AdyenPaymentMethods> {
-  private static final String TRANSACTION_ID = "TransactionId";
   private static final String PURCHASE = "PURCHASE";
 
   public AdyenDao(final DataSource dataSource) throws SQLException {
@@ -65,10 +63,8 @@ public class AdyenDao
       final UUID kbAccountId,
       final UUID kbPaymentMethodId,
       final Map<String, String> additionalDataMap,
-      final String token,
+      final boolean isRecurring,
       final UUID kbTenantId,
-      final String gatewayResponseCode,
-      final PaymentMethodStatus paymentMethodStatus,
       final boolean setDefault)
       throws SQLException {
     final Map<String, String> clonedProperties = new HashMap<>(additionalDataMap);
@@ -86,6 +82,7 @@ public class AdyenDao
                     ADYEN_PAYMENT_METHODS.KB_PAYMENT_METHOD_ID,
                     ADYEN_PAYMENT_METHODS.IS_DELETED,
                     ADYEN_PAYMENT_METHODS.ADDITIONAL_DATA,
+                    ADYEN_PAYMENT_METHODS.IS_RECURRING,
                     ADYEN_PAYMENT_METHODS.CREATED_DATE,
                     ADYEN_PAYMENT_METHODS.UPDATED_DATE,
                     ADYEN_PAYMENT_METHODS.IS_DEFAULT,
@@ -95,6 +92,7 @@ public class AdyenDao
                     kbPaymentMethodId.toString(),
                     (short) FALSE,
                     asString(clonedProperties),
+                    (short) fromBoolean(isRecurring),
                     toLocalDateTime(new DateTime()),
                     toLocalDateTime(new DateTime()),
                     (short) fromBoolean(setDefault),
@@ -110,9 +108,10 @@ public class AdyenDao
       throws SQLException {
     execute(
         dataSource.getConnection(),
-        new WithConnectionCallback<AdyenResponsesRecord>() {
+        new WithConnectionCallback<AdyenPaymentMethodsRecord>() {
           @Override
-          public AdyenResponsesRecord withConnection(final Connection conn) throws SQLException {
+          public AdyenPaymentMethodsRecord withConnection(final Connection conn)
+              throws SQLException {
 
             DSL.using(conn, dialect, settings)
                 .update(ADYEN_PAYMENT_METHODS)
@@ -121,6 +120,28 @@ public class AdyenDao
                     ADYEN_PAYMENT_METHODS.KB_PAYMENT_METHOD_ID.equal(kbPaymentMethodId.toString()))
                 .and(ADYEN_PAYMENT_METHODS.KB_TENANT_ID.equal(kbTenantId.toString()))
                 .and(ADYEN_PAYMENT_METHODS.IS_DELETED.equal((short) FALSE))
+                .execute();
+            return null;
+          }
+        });
+  }
+
+  public void updateRecurringDetailsPaymentMethod(
+      final UUID kbPaymentMethodId, final UUID kbTenantId, final String recurringData)
+      throws SQLException {
+    execute(
+        dataSource.getConnection(),
+        new WithConnectionCallback<AdyenPaymentMethodsRecord>() {
+          @Override
+          public AdyenPaymentMethodsRecord withConnection(final Connection conn)
+              throws SQLException {
+
+            DSL.using(conn, dialect, settings)
+                .update(ADYEN_PAYMENT_METHODS)
+                .set(ADYEN_PAYMENT_METHODS.RECURRING_DETAIL_REFERENCE, recurringData)
+                .where(
+                    ADYEN_PAYMENT_METHODS.KB_PAYMENT_METHOD_ID.equal(kbPaymentMethodId.toString()))
+                .and(ADYEN_PAYMENT_METHODS.KB_TENANT_ID.equal(kbTenantId.toString()))
                 .execute();
             return null;
           }
@@ -137,9 +158,7 @@ public class AdyenDao
 
             DSL.using(conn, dialect, settings)
                 .update(ADYEN_RESPONSES)
-                .set(
-                    ADYEN_RESPONSES.PSP_REFERENCE,
-                    outputDTO.getAdditionalData().get(TRANSACTION_ID))
+                .set(ADYEN_RESPONSES.PSP_REFERENCE, outputDTO.getPspReferenceCode())
                 .set(ADYEN_RESPONSES.TRANSACTION_STATUS, outputDTO.getStatus().name())
                 .where(ADYEN_RESPONSES.KB_PAYMENT_ID.equal(kbPaymentId.toString()))
                 .and(ADYEN_RESPONSES.KB_TENANT_ID.equal(tenantId.toString()))
@@ -175,14 +194,12 @@ public class AdyenDao
         });
   }
 
-  @SuppressWarnings({"squid:S00107", "squid:S1188"})
   // Responses
   public AdyenResponsesRecord addResponse(
       final UUID kbAccountId,
       final UUID kbPaymentId,
       final UUID kbPaymentTransactionId,
       final TransactionType transactionType,
-      final PaymentPluginStatus status,
       final String transactionId,
       final BigDecimal amount,
       final Currency currency,
@@ -325,6 +342,7 @@ public class AdyenDao
                     ADYEN_NOTIFICATIONS.AMOUNT,
                     ADYEN_NOTIFICATIONS.CURRENCY,
                     ADYEN_NOTIFICATIONS.CREATED_DATE,
+                    ADYEN_NOTIFICATIONS.ADDITIONAL_DATA,
                     ADYEN_NOTIFICATIONS.KB_TENANT_ID)
                 .values(
                     kbAccountId.toString(),
@@ -340,6 +358,7 @@ public class AdyenDao
                     dbAmount,
                     dbCurrency,
                     toLocalDateTime(DateTime.now()),
+                    item.getAdditionalData() != null ? (asString(item.getAdditionalData())) : null,
                     tenantId.toString())
                 .returning()
                 .fetchOne();
@@ -374,8 +393,26 @@ public class AdyenDao
           public AdyenResponsesRecord withConnection(final Connection conn) throws SQLException {
             return DSL.using(conn, dialect, settings)
                 .selectFrom(ADYEN_RESPONSES)
-                .where(DSL.field(ADYEN_RESPONSES.REFERENCE).equal(merchantReference.toString()))
+                .where(
+                    DSL.field(ADYEN_RESPONSES.KB_PAYMENT_TRANSACTION_ID).equal(merchantReference))
                 .orderBy(ADYEN_RESPONSES.RECORD_ID)
+                .fetchOne();
+          }
+        });
+  }
+
+  public AdyenPaymentMethodsRecord getPaymentMethod(final String kbPaymentMethodId)
+      throws SQLException {
+    return execute(
+        dataSource.getConnection(),
+        new WithConnectionCallback<AdyenPaymentMethodsRecord>() {
+          @Override
+          public AdyenPaymentMethodsRecord withConnection(final Connection conn)
+              throws SQLException {
+            return DSL.using(conn, dialect, settings)
+                .selectFrom(ADYEN_PAYMENT_METHODS)
+                .where(
+                    DSL.field(ADYEN_PAYMENT_METHODS.KB_PAYMENT_METHOD_ID).equal(kbPaymentMethodId))
                 .fetchOne();
           }
         });

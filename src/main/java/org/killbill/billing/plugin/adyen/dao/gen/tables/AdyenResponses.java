@@ -67,6 +67,11 @@ public class AdyenResponses extends TableImpl<AdyenResponsesRecord> {
   public final TableField<AdyenResponsesRecord, String> TRANSACTION_TYPE =
       createField(DSL.name("transaction_type"), SQLDataType.VARCHAR(32).nullable(false), this, "");
 
+  /** The column <code>killbill.adyen_responses.transaction_status</code>. */
+  public final TableField<AdyenResponsesRecord, String> TRANSACTION_STATUS =
+      createField(
+          DSL.name("transaction_status"), SQLDataType.VARCHAR(32).nullable(false), this, "");
+
   /** The column <code>killbill.adyen_responses.amount</code>. */
   public final TableField<AdyenResponsesRecord, BigDecimal> AMOUNT =
       createField(
@@ -80,6 +85,14 @@ public class AdyenResponses extends TableImpl<AdyenResponsesRecord> {
       createField(
           DSL.name("currency"),
           SQLDataType.CHAR(3).defaultValue(DSL.inline("NULL", SQLDataType.CHAR)),
+          this,
+          "");
+
+  /** The column <code>killbill.adyen_responses.session_id</code>. */
+  public final TableField<AdyenResponsesRecord, String> SESSION_ID =
+      createField(
+          DSL.name("session_id"),
+          SQLDataType.CHAR(36).defaultValue(DSL.inline("NULL", SQLDataType.CHAR)),
           this,
           "");
 
@@ -218,22 +231,6 @@ public class AdyenResponses extends TableImpl<AdyenResponsesRecord> {
   /** The column <code>killbill.adyen_responses.kb_tenant_id</code>. */
   public final TableField<AdyenResponsesRecord, String> KB_TENANT_ID =
       createField(DSL.name("kb_tenant_id"), SQLDataType.CHAR(36).nullable(false), this, "");
-
-  /** The column <code>killbill.adyen_responses.session_id</code>. */
-  public final TableField<AdyenResponsesRecord, String> SESSION_ID =
-      createField(
-          DSL.name("session_id"),
-          SQLDataType.VARCHAR(36).defaultValue(DSL.inline("NULL", SQLDataType.VARCHAR)),
-          this,
-          "");
-
-  /** The column <code>killbill.adyen_responses.transaction_status</code>. */
-  public final TableField<AdyenResponsesRecord, String> TRANSACTION_STATUS =
-      createField(
-          DSL.name("transaction_status"),
-          SQLDataType.VARCHAR(36).defaultValue(DSL.inline("NULL", SQLDataType.VARCHAR)),
-          this,
-          "");
 
   private AdyenResponses(Name alias, Table<AdyenResponsesRecord> aliased) {
     this(alias, aliased, null);

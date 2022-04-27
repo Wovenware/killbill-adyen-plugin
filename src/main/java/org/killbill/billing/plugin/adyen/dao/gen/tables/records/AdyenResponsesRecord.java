@@ -66,223 +66,223 @@ public class AdyenResponsesRecord extends UpdatableRecordImpl<AdyenResponsesReco
     return (String) get(4);
   }
 
-  /** Setter for <code>killbill.adyen_responses.amount</code>. */
-  public void setAmount(BigDecimal value) {
-    set(5, value);
-  }
-
-  /** Getter for <code>killbill.adyen_responses.amount</code>. */
-  public BigDecimal getAmount() {
-    return (BigDecimal) get(5);
-  }
-
-  /** Setter for <code>killbill.adyen_responses.currency</code>. */
-  public void setCurrency(String value) {
-    set(6, value);
-  }
-
-  /** Getter for <code>killbill.adyen_responses.currency</code>. */
-  public String getCurrency() {
-    return (String) get(6);
-  }
-
-  /** Setter for <code>killbill.adyen_responses.psp_result</code>. */
-  public void setPspResult(String value) {
-    set(7, value);
-  }
-
-  /** Getter for <code>killbill.adyen_responses.psp_result</code>. */
-  public String getPspResult() {
-    return (String) get(7);
-  }
-
-  /** Setter for <code>killbill.adyen_responses.psp_reference</code>. */
-  public void setPspReference(String value) {
-    set(8, value);
-  }
-
-  /** Getter for <code>killbill.adyen_responses.psp_reference</code>. */
-  public String getPspReference() {
-    return (String) get(8);
-  }
-
-  /** Setter for <code>killbill.adyen_responses.auth_code</code>. */
-  public void setAuthCode(String value) {
-    set(9, value);
-  }
-
-  /** Getter for <code>killbill.adyen_responses.auth_code</code>. */
-  public String getAuthCode() {
-    return (String) get(9);
-  }
-
-  /** Setter for <code>killbill.adyen_responses.result_code</code>. */
-  public void setResultCode(String value) {
-    set(10, value);
-  }
-
-  /** Getter for <code>killbill.adyen_responses.result_code</code>. */
-  public String getResultCode() {
-    return (String) get(10);
-  }
-
-  /** Setter for <code>killbill.adyen_responses.refusal_reason</code>. */
-  public void setRefusalReason(String value) {
-    set(11, value);
-  }
-
-  /** Getter for <code>killbill.adyen_responses.refusal_reason</code>. */
-  public String getRefusalReason() {
-    return (String) get(11);
-  }
-
-  /** Setter for <code>killbill.adyen_responses.reference</code>. */
-  public void setReference(String value) {
-    set(12, value);
-  }
-
-  /** Getter for <code>killbill.adyen_responses.reference</code>. */
-  public String getReference() {
-    return (String) get(12);
-  }
-
-  /** Setter for <code>killbill.adyen_responses.psp_error_codes</code>. */
-  public void setPspErrorCodes(String value) {
-    set(13, value);
-  }
-
-  /** Getter for <code>killbill.adyen_responses.psp_error_codes</code>. */
-  public String getPspErrorCodes() {
-    return (String) get(13);
-  }
-
-  /** Setter for <code>killbill.adyen_responses.payment_internal_ref</code>. */
-  public void setPaymentInternalRef(String value) {
-    set(14, value);
-  }
-
-  /** Getter for <code>killbill.adyen_responses.payment_internal_ref</code>. */
-  public String getPaymentInternalRef() {
-    return (String) get(14);
-  }
-
-  /** Setter for <code>killbill.adyen_responses.form_url</code>. */
-  public void setFormUrl(String value) {
-    set(15, value);
-  }
-
-  /** Getter for <code>killbill.adyen_responses.form_url</code>. */
-  public String getFormUrl() {
-    return (String) get(15);
-  }
-
-  /** Setter for <code>killbill.adyen_responses.dcc_amount</code>. */
-  public void setDccAmount(BigDecimal value) {
-    set(16, value);
-  }
-
-  /** Getter for <code>killbill.adyen_responses.dcc_amount</code>. */
-  public BigDecimal getDccAmount() {
-    return (BigDecimal) get(16);
-  }
-
-  /** Setter for <code>killbill.adyen_responses.dcc_currency</code>. */
-  public void setDccCurrency(String value) {
-    set(17, value);
-  }
-
-  /** Getter for <code>killbill.adyen_responses.dcc_currency</code>. */
-  public String getDccCurrency() {
-    return (String) get(17);
-  }
-
-  /** Setter for <code>killbill.adyen_responses.dcc_signature</code>. */
-  public void setDccSignature(String value) {
-    set(18, value);
-  }
-
-  /** Getter for <code>killbill.adyen_responses.dcc_signature</code>. */
-  public String getDccSignature() {
-    return (String) get(18);
-  }
-
-  /** Setter for <code>killbill.adyen_responses.issuer_url</code>. */
-  public void setIssuerUrl(String value) {
-    set(19, value);
-  }
-
-  /** Getter for <code>killbill.adyen_responses.issuer_url</code>. */
-  public String getIssuerUrl() {
-    return (String) get(19);
-  }
-
-  /** Setter for <code>killbill.adyen_responses.md</code>. */
-  public void setMd(String value) {
-    set(20, value);
-  }
-
-  /** Getter for <code>killbill.adyen_responses.md</code>. */
-  public String getMd() {
-    return (String) get(20);
-  }
-
-  /** Setter for <code>killbill.adyen_responses.pa_request</code>. */
-  public void setPaRequest(String value) {
-    set(21, value);
-  }
-
-  /** Getter for <code>killbill.adyen_responses.pa_request</code>. */
-  public String getPaRequest() {
-    return (String) get(21);
-  }
-
-  /** Setter for <code>killbill.adyen_responses.additional_data</code>. */
-  public void setAdditionalData(String value) {
-    set(22, value);
-  }
-
-  /** Getter for <code>killbill.adyen_responses.additional_data</code>. */
-  public String getAdditionalData() {
-    return (String) get(22);
-  }
-
-  /** Setter for <code>killbill.adyen_responses.created_date</code>. */
-  public void setCreatedDate(LocalDateTime value) {
-    set(23, value);
-  }
-
-  /** Getter for <code>killbill.adyen_responses.created_date</code>. */
-  public LocalDateTime getCreatedDate() {
-    return (LocalDateTime) get(23);
-  }
-
-  /** Setter for <code>killbill.adyen_responses.kb_tenant_id</code>. */
-  public void setKbTenantId(String value) {
-    set(24, value);
-  }
-
-  /** Getter for <code>killbill.adyen_responses.kb_tenant_id</code>. */
-  public String getKbTenantId() {
-    return (String) get(24);
-  }
-
-  /** Setter for <code>killbill.adyen_responses.session_id</code>. */
-  public void setSessionId(String value) {
-    set(25, value);
-  }
-
-  /** Getter for <code>killbill.adyen_responses.session_id</code>. */
-  public String getSessionId() {
-    return (String) get(25);
-  }
-
   /** Setter for <code>killbill.adyen_responses.transaction_status</code>. */
   public void setTransactionStatus(String value) {
-    set(26, value);
+    set(5, value);
   }
 
   /** Getter for <code>killbill.adyen_responses.transaction_status</code>. */
   public String getTransactionStatus() {
+    return (String) get(5);
+  }
+
+  /** Setter for <code>killbill.adyen_responses.amount</code>. */
+  public void setAmount(BigDecimal value) {
+    set(6, value);
+  }
+
+  /** Getter for <code>killbill.adyen_responses.amount</code>. */
+  public BigDecimal getAmount() {
+    return (BigDecimal) get(6);
+  }
+
+  /** Setter for <code>killbill.adyen_responses.currency</code>. */
+  public void setCurrency(String value) {
+    set(7, value);
+  }
+
+  /** Getter for <code>killbill.adyen_responses.currency</code>. */
+  public String getCurrency() {
+    return (String) get(7);
+  }
+
+  /** Setter for <code>killbill.adyen_responses.session_id</code>. */
+  public void setSessionId(String value) {
+    set(8, value);
+  }
+
+  /** Getter for <code>killbill.adyen_responses.session_id</code>. */
+  public String getSessionId() {
+    return (String) get(8);
+  }
+
+  /** Setter for <code>killbill.adyen_responses.psp_result</code>. */
+  public void setPspResult(String value) {
+    set(9, value);
+  }
+
+  /** Getter for <code>killbill.adyen_responses.psp_result</code>. */
+  public String getPspResult() {
+    return (String) get(9);
+  }
+
+  /** Setter for <code>killbill.adyen_responses.psp_reference</code>. */
+  public void setPspReference(String value) {
+    set(10, value);
+  }
+
+  /** Getter for <code>killbill.adyen_responses.psp_reference</code>. */
+  public String getPspReference() {
+    return (String) get(10);
+  }
+
+  /** Setter for <code>killbill.adyen_responses.auth_code</code>. */
+  public void setAuthCode(String value) {
+    set(11, value);
+  }
+
+  /** Getter for <code>killbill.adyen_responses.auth_code</code>. */
+  public String getAuthCode() {
+    return (String) get(11);
+  }
+
+  /** Setter for <code>killbill.adyen_responses.result_code</code>. */
+  public void setResultCode(String value) {
+    set(12, value);
+  }
+
+  /** Getter for <code>killbill.adyen_responses.result_code</code>. */
+  public String getResultCode() {
+    return (String) get(12);
+  }
+
+  /** Setter for <code>killbill.adyen_responses.refusal_reason</code>. */
+  public void setRefusalReason(String value) {
+    set(13, value);
+  }
+
+  /** Getter for <code>killbill.adyen_responses.refusal_reason</code>. */
+  public String getRefusalReason() {
+    return (String) get(13);
+  }
+
+  /** Setter for <code>killbill.adyen_responses.reference</code>. */
+  public void setReference(String value) {
+    set(14, value);
+  }
+
+  /** Getter for <code>killbill.adyen_responses.reference</code>. */
+  public String getReference() {
+    return (String) get(14);
+  }
+
+  /** Setter for <code>killbill.adyen_responses.psp_error_codes</code>. */
+  public void setPspErrorCodes(String value) {
+    set(15, value);
+  }
+
+  /** Getter for <code>killbill.adyen_responses.psp_error_codes</code>. */
+  public String getPspErrorCodes() {
+    return (String) get(15);
+  }
+
+  /** Setter for <code>killbill.adyen_responses.payment_internal_ref</code>. */
+  public void setPaymentInternalRef(String value) {
+    set(16, value);
+  }
+
+  /** Getter for <code>killbill.adyen_responses.payment_internal_ref</code>. */
+  public String getPaymentInternalRef() {
+    return (String) get(16);
+  }
+
+  /** Setter for <code>killbill.adyen_responses.form_url</code>. */
+  public void setFormUrl(String value) {
+    set(17, value);
+  }
+
+  /** Getter for <code>killbill.adyen_responses.form_url</code>. */
+  public String getFormUrl() {
+    return (String) get(17);
+  }
+
+  /** Setter for <code>killbill.adyen_responses.dcc_amount</code>. */
+  public void setDccAmount(BigDecimal value) {
+    set(18, value);
+  }
+
+  /** Getter for <code>killbill.adyen_responses.dcc_amount</code>. */
+  public BigDecimal getDccAmount() {
+    return (BigDecimal) get(18);
+  }
+
+  /** Setter for <code>killbill.adyen_responses.dcc_currency</code>. */
+  public void setDccCurrency(String value) {
+    set(19, value);
+  }
+
+  /** Getter for <code>killbill.adyen_responses.dcc_currency</code>. */
+  public String getDccCurrency() {
+    return (String) get(19);
+  }
+
+  /** Setter for <code>killbill.adyen_responses.dcc_signature</code>. */
+  public void setDccSignature(String value) {
+    set(20, value);
+  }
+
+  /** Getter for <code>killbill.adyen_responses.dcc_signature</code>. */
+  public String getDccSignature() {
+    return (String) get(20);
+  }
+
+  /** Setter for <code>killbill.adyen_responses.issuer_url</code>. */
+  public void setIssuerUrl(String value) {
+    set(21, value);
+  }
+
+  /** Getter for <code>killbill.adyen_responses.issuer_url</code>. */
+  public String getIssuerUrl() {
+    return (String) get(21);
+  }
+
+  /** Setter for <code>killbill.adyen_responses.md</code>. */
+  public void setMd(String value) {
+    set(22, value);
+  }
+
+  /** Getter for <code>killbill.adyen_responses.md</code>. */
+  public String getMd() {
+    return (String) get(22);
+  }
+
+  /** Setter for <code>killbill.adyen_responses.pa_request</code>. */
+  public void setPaRequest(String value) {
+    set(23, value);
+  }
+
+  /** Getter for <code>killbill.adyen_responses.pa_request</code>. */
+  public String getPaRequest() {
+    return (String) get(23);
+  }
+
+  /** Setter for <code>killbill.adyen_responses.additional_data</code>. */
+  public void setAdditionalData(String value) {
+    set(24, value);
+  }
+
+  /** Getter for <code>killbill.adyen_responses.additional_data</code>. */
+  public String getAdditionalData() {
+    return (String) get(24);
+  }
+
+  /** Setter for <code>killbill.adyen_responses.created_date</code>. */
+  public void setCreatedDate(LocalDateTime value) {
+    set(25, value);
+  }
+
+  /** Getter for <code>killbill.adyen_responses.created_date</code>. */
+  public LocalDateTime getCreatedDate() {
+    return (LocalDateTime) get(25);
+  }
+
+  /** Setter for <code>killbill.adyen_responses.kb_tenant_id</code>. */
+  public void setKbTenantId(String value) {
+    set(26, value);
+  }
+
+  /** Getter for <code>killbill.adyen_responses.kb_tenant_id</code>. */
+  public String getKbTenantId() {
     return (String) get(26);
   }
 
@@ -311,8 +311,10 @@ public class AdyenResponsesRecord extends UpdatableRecordImpl<AdyenResponsesReco
       String kbPaymentId,
       String kbPaymentTransactionId,
       String transactionType,
+      String transactionStatus,
       BigDecimal amount,
       String currency,
+      String sessionId,
       String pspResult,
       String pspReference,
       String authCode,
@@ -330,9 +332,7 @@ public class AdyenResponsesRecord extends UpdatableRecordImpl<AdyenResponsesReco
       String paRequest,
       String additionalData,
       LocalDateTime createdDate,
-      String kbTenantId,
-      String sessionId,
-      String transactionStatus) {
+      String kbTenantId) {
     super(AdyenResponses.ADYEN_RESPONSES);
 
     setRecordId(recordId);
@@ -340,8 +340,10 @@ public class AdyenResponsesRecord extends UpdatableRecordImpl<AdyenResponsesReco
     setKbPaymentId(kbPaymentId);
     setKbPaymentTransactionId(kbPaymentTransactionId);
     setTransactionType(transactionType);
+    setTransactionStatus(transactionStatus);
     setAmount(amount);
     setCurrency(currency);
+    setSessionId(sessionId);
     setPspResult(pspResult);
     setPspReference(pspReference);
     setAuthCode(authCode);
@@ -360,7 +362,5 @@ public class AdyenResponsesRecord extends UpdatableRecordImpl<AdyenResponsesReco
     setAdditionalData(additionalData);
     setCreatedDate(createdDate);
     setKbTenantId(kbTenantId);
-    setSessionId(sessionId);
-    setTransactionStatus(transactionStatus);
   }
 }

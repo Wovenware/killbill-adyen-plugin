@@ -17,48 +17,45 @@
 package org.killbill.billing.plugin.adyen.core.resources;
 
 import com.google.inject.Inject;
+import java.math.BigDecimal;
+import java.util.Map;
 import java.util.UUID;
+import javax.inject.Named;
 import javax.inject.Singleton;
-import org.jooby.Result;
-import org.jooby.Results;
-import org.jooby.mvc.Body;
+import org.jooby.mvc.Local;
 import org.jooby.mvc.POST;
 import org.jooby.mvc.Path;
 import org.killbill.billing.osgi.libs.killbill.OSGIKillbillClock;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
-import org.killbill.billing.plugin.adyen.api.AdyenPaymentPluginApi;
 import org.killbill.billing.plugin.adyen.core.AdyenActivator;
 import org.killbill.billing.plugin.api.PluginCallContext;
-import org.killbill.billing.plugin.core.resources.PluginHealthcheck;
+import org.killbill.billing.plugin.core.PluginServlet;
+import org.killbill.billing.tenant.api.Tenant;
 import org.killbill.billing.util.callcontext.CallContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Singleton
-@Path("/notification")
-public class AdyenNotificationServlet extends PluginHealthcheck {
-  private static final Logger logger = LoggerFactory.getLogger(AdyenNotificationServlet.class);
+@Path("/checkout")
+public class AdyenCheckoutServlet extends PluginServlet {
   private final OSGIKillbillClock clock;
-  private final AdyenPaymentPluginApi adyenPaymentPluginApi;
+  private final AdyenCheckoutService service;
 
   @Inject
-  public AdyenNotificationServlet(
-      final OSGIKillbillClock clock, final AdyenPaymentPluginApi adyenPaymentPluginApi) {
+  public AdyenCheckoutServlet(final OSGIKillbillClock clock, AdyenCheckoutService service) {
     this.clock = clock;
-    this.adyenPaymentPluginApi = adyenPaymentPluginApi;
+    this.service = service;
   }
 
   @POST
-  public Result notificate(@Body String body) throws PaymentPluginApiException {
-    logger.info("start notificate");
+  public Map<String, String> createSession(
+      @Named("kbAccountId") final UUID kbAccountId,
+      @Named("amount") final BigDecimal amount,
+      @Named("kbPaymentMethodId") final UUID kbPaymentMethodId,
+      @Local @Named("killbill_tenant") final Tenant tenant)
+      throws PaymentPluginApiException {
     final CallContext context =
         new PluginCallContext(
-            AdyenActivator.PLUGIN_NAME,
-            clock.getClock().getUTCNow(),
-            UUID.randomUUID(),
-            UUID.randomUUID());
-    logger.info("start result of notificate");
+            AdyenActivator.PLUGIN_NAME, clock.getClock().getUTCNow(), kbAccountId, tenant.getId());
 
-    return Results.ok(adyenPaymentPluginApi.processNotification(body, null, context).getEntity());
+    return service.createSession(kbAccountId, context, amount, kbPaymentMethodId);
   }
 }

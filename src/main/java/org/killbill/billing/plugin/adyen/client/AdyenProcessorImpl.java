@@ -17,6 +17,7 @@ package org.killbill.billing.plugin.adyen.client;
 
 import com.adyen.model.checkout.CreateCheckoutSessionResponse;
 import com.adyen.model.checkout.PaymentRefundResource;
+import com.adyen.model.checkout.PaymentsResponse;
 import com.adyen.service.exception.ApiException;
 import java.io.IOException;
 import java.util.Collection;
@@ -24,38 +25,26 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import org.joda.time.LocalDate;
-import org.killbill.billing.plugin.adyen.api.AdyenPaymentPluginApi.Callback;
 import org.killbill.billing.plugin.adyen.api.ProcessorInputDTO;
 import org.killbill.billing.plugin.adyen.api.ProcessorOutputDTO;
 import org.killbill.billing.plugin.adyen.core.AdyenConfigProperties;
 import org.killbill.billing.plugin.adyen.core.AdyenConfigurationHandler;
-import org.killbill.billing.plugin.adyen.dao.AdyenDao;
 import org.killbill.billing.plugin.api.PluginTenantContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CreditCardProcessorImpl implements GatewayProcessor {
-  private static final Logger logger = LoggerFactory.getLogger(CreditCardProcessorImpl.class);
+public class AdyenProcessorImpl implements GatewayProcessor {
+  private static final Logger logger = LoggerFactory.getLogger(AdyenProcessorImpl.class);
 
   private final HttpClientImpl httpClient;
-  private final AdyenConfigProperties adyenConfigProperties;
-  private Callback callback;
-  private AdyenDao dao;
 
-  private static final String INTERNAL = "INTERNAL";
   private static final String MERCHANT_ACCOUNT = "merchantAccount";
   private static final String API_KEY = "apiKey";
 
-  public CreditCardProcessorImpl(
-      HttpClientImpl httpClient,
-      AdyenConfigProperties adyenConfigProperties,
-      Callback callback,
-      AdyenDao dao) {
+  public AdyenProcessorImpl(
+      HttpClientImpl httpClient, AdyenConfigProperties adyenConfigProperties) {
     this.httpClient = httpClient;
-    this.adyenConfigProperties = adyenConfigProperties;
-    this.callback = callback;
-    this.dao = dao;
   }
 
   @Override
@@ -65,17 +54,15 @@ public class CreditCardProcessorImpl implements GatewayProcessor {
 
   @Override
   public ProcessorOutputDTO processOneTimePayment(ProcessorInputDTO input) {
-
-    return null;
-  }
-
-  @Override
-  public ProcessorOutputDTO processPayment(ProcessorInputDTO input) {
-    CreateCheckoutSessionResponse response = null;
+    PaymentsResponse response = null;
     try {
       response =
-          httpClient.checkoutsessions(
-              input.getCurrency(), input.getAmount(), input.getKbTransactionId());
+          httpClient.purchase(
+              input.getCurrency(),
+              input.getAmount(),
+              input.getKbTransactionId(),
+              input.getKbAccountId(),
+              input.getRecurringData());
     } catch (IOException e) {
       logger.error("IO Exception{}", e.getMessage(), e);
       e.printStackTrace();
@@ -84,13 +71,45 @@ public class CreditCardProcessorImpl implements GatewayProcessor {
       logger.error("API Exception {} \n {}", e.getError(), e.getMessage(), e);
       e.printStackTrace();
     }
-    logger.info("the response {}", response);
     ProcessorOutputDTO outputDTO = new ProcessorOutputDTO();
-    outputDTO.setFirstPaymentReferenceId(response.getId());
-    outputDTO.setSecondPaymentReferenceId(response.getMerchantOrderReference());
-    Map<String, String> additionalData = new HashMap<>();
-    additionalData.put("sessionData", response.getSessionData());
-    outputDTO.setAdditionalData(additionalData);
+    if (response != null) {
+      outputDTO.setFirstPaymentReferenceId(response.getPspReference());
+      outputDTO.setAdditionalData(response.getAdditionalData());
+    }
+
+    return outputDTO;
+  }
+
+  @Override
+  public ProcessorOutputDTO processPayment(ProcessorInputDTO input) {
+    CreateCheckoutSessionResponse response = null;
+    boolean recurring = input.getPaymentMethod().toString().equals("RECURRING");
+    try {
+      response =
+          httpClient.checkoutsessions(
+              input.getCurrency(),
+              input.getAmount(),
+              input.getKbTransactionId(),
+              input.getKbAccountId(),
+              recurring);
+    } catch (IOException e) {
+      logger.error("IO Exception{}", e.getMessage(), e);
+      e.printStackTrace();
+    } catch (ApiException e) {
+
+      logger.error("API Exception {} \n {}", e.getError(), e.getMessage(), e);
+      e.printStackTrace();
+    }
+
+    ProcessorOutputDTO outputDTO = new ProcessorOutputDTO();
+    if (response != null) {
+      outputDTO.setFirstPaymentReferenceId(response.getId());
+      outputDTO.setSecondPaymentReferenceId(response.getMerchantOrderReference());
+      Map<String, String> additionalData = new HashMap<>();
+      additionalData.put("sessionData", response.getSessionData());
+      outputDTO.setAdditionalData(additionalData);
+    }
+
     return outputDTO;
   }
 
@@ -115,8 +134,10 @@ public class CreditCardProcessorImpl implements GatewayProcessor {
 
     logger.info("the response {}", response);
     ProcessorOutputDTO outputDTO = new ProcessorOutputDTO();
-    outputDTO.setFirstPaymentReferenceId(response.getReference());
-    outputDTO.setSecondPaymentReferenceId(response.getPspReference());
+    if (response != null) {
+      outputDTO.setFirstPaymentReferenceId(response.getReference());
+      outputDTO.setSecondPaymentReferenceId(response.getPspReference());
+    }
 
     return outputDTO;
   }

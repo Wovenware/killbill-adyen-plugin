@@ -63,7 +63,7 @@ public abstract class AdyenPluginProperties {
           mapper.readValue(
               paymentMethodAdditionalData, new TypeReference<Map<String, Object>>() {});
     } catch (JsonProcessingException e) {
-      logger.error("{}", e);
+      logger.error("{}", e.getMessage(), e);
     }
     return additionalDataMap;
   }

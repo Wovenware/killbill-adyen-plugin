@@ -102,27 +102,10 @@ create table adyen_payment_methods (
   record_id serial
 , kb_account_id char(36) not null
 , kb_payment_method_id char(36) not null
-, token varchar(255) default null
-, cc_first_name varchar(255) default null
-, cc_last_name varchar(255) default null
-, cc_type varchar(255) default null
-, cc_exp_month varchar(255) default null
-, cc_exp_year varchar(255) default null
-, cc_number varchar(255) default null
-, cc_last_4 varchar(255) default null
-, cc_start_month varchar(255) default null
-, cc_start_year varchar(255) default null
-, cc_issue_number varchar(255) default null
-, cc_verification_value varchar(255) default null
-, cc_track_data varchar(255) default null
-, address1 varchar(255) default null
-, address2 varchar(255) default null
-, city varchar(255) default null
-, state varchar(255) default null
-, zip varchar(255) default null
-, country varchar(255) default null
+, is_recurring smallint not null default 0
 , is_default smallint not null default 0
 , is_deleted smallint not null default 0
+, recurring_detail_reference char(36) default null
 , additional_data longtext default null
 , created_date datetime not null
 , updated_date datetime not null

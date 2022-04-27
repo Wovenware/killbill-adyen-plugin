@@ -30,7 +30,6 @@ public class ProcessorOutputDTO {
   private Map<String, String> additionalData;
   private TransactionType type;
   private PaymentPluginStatus status;
-  private PaymentMethodStatus paymentMethodStatus;
   private String gatewayError;
   private String gatewayErrorCode;
   private String firstPaymentReferenceId;

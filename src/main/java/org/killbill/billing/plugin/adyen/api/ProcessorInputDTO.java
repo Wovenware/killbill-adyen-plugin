@@ -43,6 +43,8 @@ public class ProcessorInputDTO {
 
   private String pspReference;
 
+  private String recurringData;
+
   private LocalDate salesDate;
 
   private PaymentMethod paymentMethod;

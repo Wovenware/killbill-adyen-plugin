@@ -22,16 +22,21 @@ import java.util.Properties;
 public class AdyenConfigProperties {
 
   private static final String PROPERTY_PREFIX = "org.killbill.billing.plugin.adyen.";
-  private static final String DEFAULT_CONNECTION_TIMEOUT = "5";
-  private static final String DEFAULT_READ_TIMEOUT = "90";
+
+  public static final String ADYEN_API_KEY = "ADYEN_API_KEY";
+  public static final String ADYEN_RETURN_URL = "ADYEN_RETURN_URL";
+  public static final String ADYEN_HMAC_KEY = "ADYEN_HMAC_KEY";
+  public static final String ADYEN_MERCHANT_ACCOUNT = "ADYEN_MERCHANT_ACCOUNT";
+
+  public static final String ADYEN_CAPTURE_DELAY_HOURS = "ADYEN_CAPTURE_DELAY_HOURS";
 
   private final String region;
 
-  private String connectionTimeout;
-  private String readTimeout;
   private String apiKey;
   private String merchantAccount;
   private String returnUrl;
+  private String hcmaKey;
+  private String captureDelayHours;
 
   public AdyenConfigProperties(final Properties properties, final String region) {
     this.region = region;
@@ -39,65 +44,51 @@ public class AdyenConfigProperties {
     this.apiKey = properties.getProperty(PROPERTY_PREFIX + "apiKey");
     this.merchantAccount = properties.getProperty(PROPERTY_PREFIX + "merchantAccount");
     this.returnUrl = properties.getProperty(PROPERTY_PREFIX + "returnUrl");
-    setConnectionTimeout(
-        properties.getProperty(PROPERTY_PREFIX + "connectionTimeout", DEFAULT_CONNECTION_TIMEOUT));
-    setReadTimeout(properties.getProperty(PROPERTY_PREFIX + "readTimeout", DEFAULT_READ_TIMEOUT));
+    this.hcmaKey = properties.getProperty(PROPERTY_PREFIX + "hcmaKey");
+    this.captureDelayHours = properties.getProperty(PROPERTY_PREFIX + "captureDelayHours");
   }
 
   public String getRegion() {
+
     return region;
   }
 
-  public String getConnectionTimeout() {
-    return connectionTimeout;
-  }
-
-  public String getReadTimeout() {
-    return readTimeout;
-  }
-
   public String getApiKey() {
+    if (apiKey == null || apiKey.isEmpty()) {
+      return getClient(ADYEN_API_KEY, null);
+    }
     return apiKey;
   }
 
+  public String getHMACKey() {
+    if (hcmaKey == null || hcmaKey.isEmpty()) {
+      return getClient(ADYEN_HMAC_KEY, null);
+    }
+    return hcmaKey;
+  }
+
   public String getMerchantAccount() {
+    if (merchantAccount == null || merchantAccount.isEmpty()) {
+      return getClient(ADYEN_MERCHANT_ACCOUNT, null);
+    }
+
     return merchantAccount;
   }
 
   public String getReturnUrl() {
+    if (returnUrl == null || returnUrl.isEmpty()) {
+      return getClient(ADYEN_RETURN_URL, null);
+    }
+
     return returnUrl;
   }
 
-  private void setReadTimeout(String readTimeout) {
-    long readTimeoutValue = 10000;
-    if (!readTimeout.equals("")) {
-      try {
-        readTimeoutValue = Long.parseLong(readTimeout);
-      } catch (NumberFormatException e) {
-        // Allow default to be returned
-      }
-    }
-    this.readTimeout = ((Long) readTimeoutValue).toString();
-  }
-
-  private void setConnectionTimeout(String connectionTimeout) {
-    long connectionTimeoutValue = 10000;
-    if (!connectionTimeout.equals("")) {
-      try {
-        connectionTimeoutValue = Long.parseLong(connectionTimeout);
-      } catch (NumberFormatException e) {
-        // Allow default to be returned
-      }
-    }
-    this.connectionTimeout = ((Long) connectionTimeoutValue).toString();
-  }
-
-  private final boolean parseBoolean(String s) {
-    if (s != null && s.equalsIgnoreCase("yes")) {
-      return true;
+  public String getCaptureDelayHours() {
+    if (captureDelayHours == null || captureDelayHours.isEmpty()) {
+      return getClient(ADYEN_CAPTURE_DELAY_HOURS, "0");
     }
 
-    return Boolean.parseBoolean(s);
+    return captureDelayHours;
   }
 
   private String getClient(String envKey, String defaultValue) {

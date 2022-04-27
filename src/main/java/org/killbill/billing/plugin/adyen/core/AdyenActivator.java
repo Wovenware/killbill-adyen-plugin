@@ -22,10 +22,10 @@ import javax.servlet.http.HttpServlet;
 import org.killbill.billing.osgi.api.Healthcheck;
 import org.killbill.billing.osgi.api.OSGIPluginProperties;
 import org.killbill.billing.osgi.libs.killbill.KillbillActivatorBase;
-import org.killbill.billing.osgi.libs.killbill.OSGIKillbillEventDispatcher;
-import org.killbill.billing.osgi.libs.killbill.OSGIKillbillEventDispatcher.OSGIFrameworkEventHandler;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.plugin.adyen.api.AdyenPaymentPluginApi;
+import org.killbill.billing.plugin.adyen.core.resources.AdyenCheckoutService;
+import org.killbill.billing.plugin.adyen.core.resources.AdyenCheckoutServlet;
 import org.killbill.billing.plugin.adyen.core.resources.AdyenHealthcheckServlet;
 import org.killbill.billing.plugin.adyen.core.resources.AdyenNotificationServlet;
 import org.killbill.billing.plugin.adyen.dao.AdyenDao;
@@ -45,14 +45,12 @@ public class AdyenActivator extends KillbillActivatorBase {
 
   private AdyenConfigurationHandler adyenConfigurationHandler;
 
-  private OSGIKillbillEventDispatcher.OSGIKillbillEventHandler killbillEventHandler;
-
   @Override
   public void start(final BundleContext context) throws Exception {
     super.start(context);
 
     logger.info(" starting plugin {}", PLUGIN_NAME);
-    final AdyenDao aigDao = new AdyenDao(dataSource.getDataSource());
+    final AdyenDao adyenDao = new AdyenDao(dataSource.getDataSource());
 
     final String region = PluginEnvironmentConfig.getRegion(configProperties.getProperties());
 
@@ -68,24 +66,27 @@ public class AdyenActivator extends KillbillActivatorBase {
     logger.info("Registering an APIs");
     final PaymentPluginApi paymentPluginApi =
         new AdyenPaymentPluginApi(
-            adyenConfigurationHandler, killbillAPI, configProperties, clock.getClock(), aigDao);
+            adyenConfigurationHandler, killbillAPI, configProperties, clock.getClock(), adyenDao);
     registerPaymentPluginApi(context, paymentPluginApi);
 
     // Expose a healthcheck (optional), so other plugins can check on the plugin status
     logger.info("Registering healthcheck");
     final Healthcheck healthcheck = new AdyenHealthcheck();
     registerHealthcheck(context, healthcheck);
-
+    final AdyenCheckoutService checkoutService = new AdyenCheckoutService(killbillAPI);
     // Register a servlet (optional)
     final PluginApp pluginApp =
         new PluginAppBuilder(PLUGIN_NAME, killbillAPI, dataSource, super.clock, configProperties)
             .withRouteClass(AdyenHealthcheckServlet.class)
             .withRouteClass(AdyenNotificationServlet.class)
+            .withRouteClass(AdyenCheckoutServlet.class)
             .withService(healthcheck)
-            .withService(paymentPluginApi)
             .withService(clock)
+            .withService(checkoutService)
+            .withService(paymentPluginApi)
             .build();
     final HttpServlet httpServlet = PluginApp.createServlet(pluginApp);
+
     registerServlet(context, httpServlet);
 
     registerHandlers();
@@ -94,10 +95,7 @@ public class AdyenActivator extends KillbillActivatorBase {
   private void registerHandlers() {
     final PluginConfigurationEventHandler configHandler =
         new PluginConfigurationEventHandler(adyenConfigurationHandler);
-
-    dispatcher.registerEventHandlers(
-        configHandler,
-        (OSGIFrameworkEventHandler) () -> dispatcher.registerEventHandlers(killbillEventHandler));
+    dispatcher.registerEventHandlers(configHandler);
   }
 
   private void registerServlet(final BundleContext context, final Servlet servlet) {
