@@ -23,15 +23,13 @@ import org.killbill.billing.plugin.adyen.core.AdyenConfigurationHandler;
 
 public interface GatewayProcessor {
 
-  public ProcessorOutputDTO getPaymentInfo(ProcessorInputDTO input);
-
   public ProcessorOutputDTO processOneTimePayment(ProcessorInputDTO input);
 
   public ProcessorOutputDTO processPayment(ProcessorInputDTO input);
 
   public ProcessorOutputDTO refundPayment(ProcessorInputDTO input);
 
-  public ProcessorOutputDTO getPaymentMethodDetail(ProcessorInputDTO input);
+  public ProcessorOutputDTO capturePayment(ProcessorInputDTO input);
 
   public ProcessorInputDTO validateData(
       AdyenConfigurationHandler adyenConfigurationHandler,

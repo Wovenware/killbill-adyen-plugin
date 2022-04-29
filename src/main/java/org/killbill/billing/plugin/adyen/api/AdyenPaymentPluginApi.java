@@ -198,6 +198,17 @@ public class AdyenPaymentPluginApi
     final Map<String, String> mergedProperties =
         PluginProperties.toStringMap(paymentMethodProps.getProperties(), properties);
     boolean recurring;
+    if (this.adyenConfigurationHandler.getConfigurable(context.getTenantId()).getHMACKey() == null
+        || this.adyenConfigurationHandler.getConfigurable(context.getTenantId()).getApiKey() == null
+        || this.adyenConfigurationHandler
+                .getConfigurable(context.getTenantId())
+                .getMerchantAccount()
+            == null
+        || this.adyenConfigurationHandler.getConfigurable(context.getTenantId()).getReturnUrl()
+            == null) {
+      throw new PaymentMethodException(
+          "Missing one or more configuration properties (HMAC KEY/ Api Key / Merchant Account / Return URL) ");
+    }
     if (mergedProperties.get(ENABLE_RECURRING) != null
         && mergedProperties.get(ENABLE_RECURRING).equals("true")) {
       recurring = true;
@@ -262,8 +273,77 @@ public class AdyenPaymentPluginApi
       final Iterable<PluginProperty> properties,
       final CallContext context)
       throws PaymentPluginApiException {
+    logger.info("Authorize Payment for account {}", kbAccountId);
+    final Map<String, String> mergedProperties = PluginProperties.toStringMap(properties);
+    AdyenPaymentMethodsRecord paymentMethodRecord = null;
+    try {
+      paymentMethodRecord = this.adyenDao.getPaymentMethod(kbPaymentMethodId.toString());
+    } catch (SQLException e1) {
+      logger.error("[authorizePayment]  encountered a database error ", e1);
+      return AdyenPaymentTransactionInfoPlugin.cancelPaymentTransactionInfoPlugin(
+          TransactionType.PURCHASE, "[purchasePayment]  encountered a database error ");
+    }
+    GatewayProcessor gatewayProcessor =
+        GatewayProcessorFactory.get(
+            adyenConfigurationHandler.getConfigurable(context.getTenantId()), adyenDao);
+    ProcessorInputDTO input =
+        gatewayProcessor.validateData(
+            adyenConfigurationHandler, mergedProperties, kbPaymentMethodId, kbAccountId);
+    if (paymentMethodRecord.getIsRecurring() != 48) {
+      input.setPaymentMethod(PaymentMethod.RECURRING);
+    } else {
+      input.setPaymentMethod(PaymentMethod.ONE_TIME);
+    }
+    input.setAmount(amount);
+    input.setKbTransactionId(kbTransactionId.toString());
+    input.setCurrency(currency);
+    input.setKbAccountId(kbAccountId.toString());
+    List<PluginProperty> formFields = new ArrayList<>();
+    ProcessorOutputDTO outputDTO = null;
+    if (mergedProperties.get(IS_CHECKOUT) != null
+        && mergedProperties.get(IS_CHECKOUT).equals("true")) {
+      outputDTO = gatewayProcessor.processPayment(input);
+      formFields.add(
+          new PluginProperty(SESSION_DATA, outputDTO.getAdditionalData().get(SESSION_DATA), false));
+    } else {
+      input.setRecurringData(paymentMethodRecord.getRecurringDetailReference());
+      outputDTO = gatewayProcessor.processOneTimePayment(input);
+    }
 
-    return AdyenPaymentTransactionInfoPlugin.unImplementedAPI(TransactionType.AUTHORIZE);
+    AdyenResponsesRecord adyenRecord = null;
+    try {
+      adyenRecord =
+          this.adyenDao.addResponse(
+              kbAccountId,
+              kbPaymentId,
+              kbTransactionId,
+              TransactionType.AUTHORIZE,
+              amount,
+              currency,
+              PaymentPluginStatus.PENDING,
+              outputDTO.getFirstPaymentReferenceId(),
+              outputDTO,
+              context.getTenantId());
+    } catch (SQLException e) {
+      logger.error("[authorizePayment]  encountered a database error ", e);
+      return AdyenPaymentTransactionInfoPlugin.cancelPaymentTransactionInfoPlugin(
+          TransactionType.AUTHORIZE, "[authorizePayment]  encountered a database error ");
+    }
+    return new AdyenPaymentTransactionInfoPlugin(
+        adyenRecord,
+        kbPaymentId,
+        kbTransactionId,
+        TransactionType.AUTHORIZE,
+        amount,
+        currency,
+        PaymentPluginStatus.PENDING,
+        null,
+        null,
+        outputDTO.getFirstPaymentReferenceId(),
+        outputDTO.getSecondPaymentReferenceId(),
+        DateTime.now(),
+        DateTime.now(),
+        formFields);
   }
 
   @Override
@@ -277,7 +357,62 @@ public class AdyenPaymentPluginApi
       final Iterable<PluginProperty> properties,
       final CallContext context)
       throws PaymentPluginApiException {
-    return AdyenPaymentTransactionInfoPlugin.unImplementedAPI(TransactionType.CAPTURE);
+    AdyenResponsesRecord adyenRecord = null;
+
+    try {
+      adyenRecord = this.adyenDao.getSuccessfulPurchaseResponse(kbPaymentId, context.getTenantId());
+
+    } catch (SQLException e) {
+      logger.error("[capturePayment]  but we encountered a database error", e);
+      return AdyenPaymentTransactionInfoPlugin.cancelPaymentTransactionInfoPlugin(
+          TransactionType.CAPTURE, "[capturePayment] but we encountered a database error");
+    }
+
+    final Map<String, String> mergedProperties = PluginProperties.toStringMap(properties);
+    GatewayProcessor gatewayProcessor =
+        GatewayProcessorFactory.get(
+            adyenConfigurationHandler.getConfigurable(context.getTenantId()), adyenDao);
+
+    ProcessorInputDTO input =
+        gatewayProcessor.validateData(
+            adyenConfigurationHandler, mergedProperties, kbPaymentMethodId, kbAccountId);
+    input.setPspReference(adyenRecord.getPspReference());
+    input.setAmount(amount);
+    input.setKbTransactionId(kbTransactionId.toString());
+    input.setCurrency(currency);
+    ProcessorOutputDTO outputDTO = gatewayProcessor.capturePayment(input);
+
+    try {
+      adyenRecord =
+          this.adyenDao.addResponse(
+              kbAccountId,
+              kbPaymentId,
+              kbTransactionId,
+              TransactionType.CAPTURE,
+              amount,
+              currency,
+              PaymentPluginStatus.PENDING,
+              outputDTO.getFirstPaymentReferenceId(),
+              outputDTO,
+              context.getTenantId());
+    } catch (SQLException e) {
+      logger.error("We encountered a database error ", e);
+    }
+    return new AdyenPaymentTransactionInfoPlugin(
+        adyenRecord,
+        kbPaymentId,
+        kbTransactionId,
+        TransactionType.CAPTURE,
+        amount,
+        currency,
+        PaymentPluginStatus.PENDING,
+        null,
+        null,
+        outputDTO.getFirstPaymentReferenceId(),
+        outputDTO.getSecondPaymentReferenceId(),
+        DateTime.now(),
+        DateTime.now(),
+        null);
   }
 
   @Override
@@ -516,13 +651,7 @@ public class AdyenPaymentPluginApi
                     false,
                     properties,
                     tempContext);
-        this.killbillAPI
-            .getPaymentApi()
-            .notifyPendingTransactionOfStateChanged(
-                account,
-                UUID.fromString(record.getKbPaymentTransactionId()),
-                notificationItem.isSuccess(),
-                tempContext);
+
         ProcessorOutputDTO outputDTO = new ProcessorOutputDTO();
         outputDTO.setPspReferenceCode(notificationItem.getPspReference());
         if (notificationItem.isSuccess()) {

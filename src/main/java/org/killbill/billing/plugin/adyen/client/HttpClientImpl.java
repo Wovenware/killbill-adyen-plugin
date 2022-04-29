@@ -22,7 +22,9 @@ import com.adyen.model.checkout.CreateCheckoutSessionRequest;
 import com.adyen.model.checkout.CreateCheckoutSessionRequest.RecurringProcessingModelEnum;
 import com.adyen.model.checkout.CreateCheckoutSessionRequest.ShopperInteractionEnum;
 import com.adyen.model.checkout.CreateCheckoutSessionResponse;
+import com.adyen.model.checkout.CreatePaymentCaptureRequest;
 import com.adyen.model.checkout.CreatePaymentRefundRequest;
+import com.adyen.model.checkout.PaymentCaptureResource;
 import com.adyen.model.checkout.PaymentRefundResource;
 import com.adyen.model.checkout.PaymentsRequest;
 import com.adyen.model.checkout.PaymentsResponse;
@@ -32,15 +34,21 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.plugin.adyen.core.AdyenConfigProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HttpClientImpl implements HttpClient {
 
   private final AdyenConfigProperties adyenConfigProperties;
   private final Checkout checkout;
+  private static final Logger logger = LoggerFactory.getLogger(HttpClientImpl.class);
 
   public HttpClientImpl(AdyenConfigProperties adyenConfigProperties) {
     this.adyenConfigProperties = adyenConfigProperties;
-    Client client = new Client(adyenConfigProperties.getApiKey(), Environment.TEST);
+    Client client =
+        new Client(
+            adyenConfigProperties.getApiKey(),
+            Environment.valueOf(adyenConfigProperties.getEnviroment()));
     this.checkout = new Checkout(client);
   }
 
@@ -53,7 +61,7 @@ public class HttpClientImpl implements HttpClient {
       boolean isRecurrent)
       throws IOException, ApiException {
 
-    Amount amount = new Amount().currency(currency.name()).value(kbAmount.longValue());
+    Amount amount = new Amount().currency(currency.name()).value(convertToMinorUnit(kbAmount));
     CreateCheckoutSessionRequest checkoutSession = new CreateCheckoutSessionRequest();
     checkoutSession.merchantAccount(adyenConfigProperties.getMerchantAccount());
     checkoutSession.setChannel(CreateCheckoutSessionRequest.ChannelEnum.WEB);
@@ -61,14 +69,15 @@ public class HttpClientImpl implements HttpClient {
     checkoutSession.setReturnUrl(adyenConfigProperties.getReturnUrl());
     checkoutSession.setAmount(amount);
     checkoutSession.setCountryCode(adyenConfigProperties.getRegion());
-    checkoutSession.setCaptureDelayHours(
-        Integer.valueOf(adyenConfigProperties.getCaptureDelayHours()));
+    //    checkoutSession.setCaptureDelayHours(
+    //        Integer.valueOf(adyenConfigProperties.getCaptureDelayHours()));
     checkoutSession.setShopperReference(kbAccountId);
     if (isRecurrent) {
       checkoutSession.setRecurringProcessingModel(RecurringProcessingModelEnum.CARDONFILE);
       checkoutSession.shopperInteraction(ShopperInteractionEnum.ECOMMERCE);
       checkoutSession.storePaymentMethod(true);
     }
+
     return checkout.sessions(checkoutSession);
   }
 
@@ -78,7 +87,7 @@ public class HttpClientImpl implements HttpClient {
       throws IOException, ApiException {
 
     CreatePaymentRefundRequest paymentRefundRequest = new CreatePaymentRefundRequest();
-    Amount amount = new Amount().currency(currency.name()).value(kbAmount.longValue());
+    Amount amount = new Amount().currency(currency.name()).value(convertToMinorUnit(kbAmount));
     paymentRefundRequest.setAmount(amount);
     paymentRefundRequest.setMerchantAccount(adyenConfigProperties.getMerchantAccount());
     paymentRefundRequest.setReference(transactionId);
@@ -94,7 +103,7 @@ public class HttpClientImpl implements HttpClient {
       String recurringDetailReference)
       throws IOException, ApiException {
     PaymentsRequest paymentsRequest = new PaymentsRequest();
-    Amount amount = new Amount().currency(currency.name()).value(kbAmount.longValue());
+    Amount amount = new Amount().currency(currency.name()).value(convertToMinorUnit(kbAmount));
     paymentsRequest.setAmount(amount);
     paymentsRequest.setReference(transactionId);
 
@@ -105,9 +114,30 @@ public class HttpClientImpl implements HttpClient {
     paymentsRequest.setRecurringProcessingModel(
         PaymentsRequest.RecurringProcessingModelEnum.CARD_ON_FILE);
     paymentsRequest.addOneClickData(recurringDetailReference, null);
-    paymentsRequest.setCaptureDelayHours(
-        Integer.valueOf(adyenConfigProperties.getCaptureDelayHours()));
+    //    paymentsRequest.setCaptureDelayHours(
+    //        Integer.valueOf(adyenConfigProperties.getCaptureDelayHours()));
 
     return checkout.payments(paymentsRequest);
+  }
+
+  @Override
+  public PaymentCaptureResource capture(
+      Currency currency, BigDecimal kbAmount, String transactionId, String paymentPspReference)
+      throws IOException, ApiException {
+    CreatePaymentCaptureRequest paymentCaptureRequest = new CreatePaymentCaptureRequest();
+    logger.info("this is the amount {}", kbAmount.toString());
+    Amount amount = new Amount().currency(currency.name()).value(convertToMinorUnit(kbAmount));
+    paymentCaptureRequest.setAmount(amount);
+    paymentCaptureRequest.setMerchantAccount(adyenConfigProperties.getMerchantAccount());
+    paymentCaptureRequest.setReference(transactionId);
+
+    return checkout.paymentsCaptures(paymentPspReference, paymentCaptureRequest);
+  }
+
+  private Long convertToMinorUnit(BigDecimal amount) {
+
+    String minorUnit = amount.toString().replace(".", "");
+
+    return Long.valueOf(minorUnit);
   }
 }

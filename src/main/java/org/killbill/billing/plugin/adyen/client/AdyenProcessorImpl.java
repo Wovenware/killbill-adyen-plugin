@@ -16,6 +16,7 @@
 package org.killbill.billing.plugin.adyen.client;
 
 import com.adyen.model.checkout.CreateCheckoutSessionResponse;
+import com.adyen.model.checkout.PaymentCaptureResource;
 import com.adyen.model.checkout.PaymentRefundResource;
 import com.adyen.model.checkout.PaymentsResponse;
 import com.adyen.service.exception.ApiException;
@@ -45,11 +46,6 @@ public class AdyenProcessorImpl implements GatewayProcessor {
   public AdyenProcessorImpl(
       HttpClientImpl httpClient, AdyenConfigProperties adyenConfigProperties) {
     this.httpClient = httpClient;
-  }
-
-  @Override
-  public ProcessorOutputDTO getPaymentInfo(ProcessorInputDTO input) {
-    return null;
   }
 
   @Override
@@ -132,19 +128,38 @@ public class AdyenProcessorImpl implements GatewayProcessor {
       e.printStackTrace();
     }
 
-    logger.info("the response {}", response);
     ProcessorOutputDTO outputDTO = new ProcessorOutputDTO();
     if (response != null) {
-      outputDTO.setFirstPaymentReferenceId(response.getReference());
-      outputDTO.setSecondPaymentReferenceId(response.getPspReference());
+      outputDTO.setFirstPaymentReferenceId(response.getPspReference());
     }
 
     return outputDTO;
   }
 
   @Override
-  public ProcessorOutputDTO getPaymentMethodDetail(ProcessorInputDTO input) {
-    return null;
+  public ProcessorOutputDTO capturePayment(ProcessorInputDTO input) {
+    PaymentCaptureResource response = null;
+    try {
+      response =
+          httpClient.capture(
+              input.getCurrency(),
+              input.getAmount(),
+              input.getKbTransactionId(),
+              input.getPspReference());
+    } catch (IOException e) {
+      logger.error("IO Exception{}", e.getMessage(), e);
+      e.printStackTrace();
+    } catch (ApiException e) {
+
+      logger.error("API Exception {} \n {}", e.getError(), e.getMessage(), e);
+      e.printStackTrace();
+    }
+
+    ProcessorOutputDTO outputDTO = new ProcessorOutputDTO();
+    if (response != null) {
+      outputDTO.setFirstPaymentReferenceId(response.getPspReference());
+    }
+    return outputDTO;
   }
 
   @Override

@@ -16,6 +16,7 @@
 package org.killbill.billing.plugin.adyen.client;
 
 import com.adyen.model.checkout.CreateCheckoutSessionResponse;
+import com.adyen.model.checkout.PaymentCaptureResource;
 import com.adyen.model.checkout.PaymentRefundResource;
 import com.adyen.model.checkout.PaymentsResponse;
 import com.adyen.service.exception.ApiException;
@@ -43,5 +44,9 @@ public interface HttpClient {
       String transactionId,
       String kbAccountId,
       String recurringDetailReference)
+      throws IOException, ApiException;
+
+  public PaymentCaptureResource capture(
+      Currency currency, BigDecimal kbAmount, String transactionId, String paymentPspReference)
       throws IOException, ApiException;
 }

@@ -64,10 +64,24 @@ public class AdyenCheckoutService {
     prop.add(new PluginProperty(IS_CHECKOUT, true, false));
     try {
 
+      //      payment =
+      //          killbillAPI
+      //              .getPaymentApi()
+      //              .createPurchase(
+      //                  kbAccount,
+      //                  paymentMethodId,
+      //                  null,
+      //                  amount,
+      //                  kbAccount.getCurrency(),
+      //                  DateTime.now(),
+      //                  null,
+      //                  null,
+      //                  prop,
+      //                  context);
       payment =
           killbillAPI
               .getPaymentApi()
-              .createPurchase(
+              .createAuthorization(
                   kbAccount,
                   paymentMethodId,
                   null,

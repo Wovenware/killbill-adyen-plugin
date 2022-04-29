@@ -377,7 +377,7 @@ public class AdyenDao
                 .selectFrom(ADYEN_RESPONSES)
                 .where(DSL.field(ADYEN_RESPONSES.KB_PAYMENT_ID).equal(kbPaymentId.toString()))
                 .and(DSL.field(ADYEN_RESPONSES.KB_TENANT_ID).equal(kbTenantId.toString()))
-                .and(DSL.field(ADYEN_RESPONSES.TRANSACTION_TYPE).equal(PURCHASE))
+                //                .and(DSL.field(ADYEN_RESPONSES.TRANSACTION_TYPE).equal(PURCHASE))
                 .orderBy(ADYEN_RESPONSES.RECORD_ID)
                 .fetchOne();
           }

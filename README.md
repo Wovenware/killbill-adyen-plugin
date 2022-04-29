@@ -1,20 +1,116 @@
-# Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+# killbill-adyen-plugin
 
-# Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
+Plugin to use [Adyen](https://www.adyen.com/) as a gateway.
 
-# Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+A full end-to-end integration demo is available [here](https://github.com/killbill/killbill-stripe-demo).
 
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
+## Kill Bill compatibility
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+| Plugin version | Kill Bill version  | Adyen sdk version                                            |
+| -------------: | -----------------: | --------------------------------------------------------: |
+| 1.x.y          | 0.22.z             | 17.3.0 [2022-04-07](https://github.com/Adyen/adyen-java-api-library) |
+
+
+
+## Requirements
+
+The plugin needs a database. The latest version of the schema can be found (killbill-adyen-plugin\src\main\resources\ddl.sql).
+
+## Installation
+
+Locally:
+
+```
+kpm install_java_plugin adyen --from-source-file target/adyen-plugin-*-SNAPSHOT.jar --destination /var/tmp/bundles
+```
+
+## Configuration
+
+Go to https://ca-test.adyen.com/ca/ca/config/api_credentials_new.shtml and copy your `API key`.
+Go to https://ca-test.adyen.com/ca/ca/config/showthirdparty.shtml and copy your `HMAC Key` and set your `Return Url` to http://127.0.0.1:8080/plugins/adyen-plugin/notification
+
+Then, go to the Kaui plugin configuration page (`/admin_tenants/1?active_tab=PluginConfig`), and configure the `adyen-plugin` plugin with your key:
+
+```java
+org.killbill.billing.plugin.adyen.apiKey=test_XXX
+org.killbill.billing.plugin.adyen.returnUrl=test_XXX
+org.killbill.billing.plugin.adyen.merchantAccount=test_XXX
+org.killbill.billing.plugin.adyen.hcmaKey=test_XXX
+org.killbill.billing.plugin.adyen.enviroment= (TEST/LIVE) default is TEST
+org.killbill.billing.plugin.adyen.captureDelayHours=XX (Desire capture delay in hours after Authorize , default is "0") 
+```
+
+Alternatively, you can upload the configuration directly:
+
+```bash
+curl -v \
+     -X POST \
+     -u admin:password \
+     -H 'X-Killbill-ApiKey: bob' \
+     -H 'X-Killbill-ApiSecret: lazar' \
+     -H 'X-Killbill-CreatedBy: admin' \
+     -H 'Content-Type: text/plain' \
+     -d 'org.killbill.billing.plugin.adyen.apiKey=test_XXX
+org.killbill.billing.plugin.adyen.returnUrl=test_XXX
+org.killbill.billing.plugin.adyen.merchantAccount=test_XXX
+org.killbill.billing.plugin.adyen.hcmaKey=test_XXX
+org.killbill.billing.plugin.adyen.captureDelayHours=XX ' \
+     http://127.0.0.1:8080/1.0/kb/tenants/uploadPluginConfig/adyen-plugin
+```
+
+## Payment Method flow
+
+The plugin create the first payment via servlet using `/sessions` [here](https://docs.adyen.com/online-payments/web-drop-in#create-payment-session) If the payment is recurring we store the token generate by Adyen an then can be used multiples time it on `/payments` [here] (https://docs.adyen.com/online-payments/tokenization/create-and-use-tokens#pay-one-off).
+
+## Using Adyen Checkout
+
+This plugin implementation is using Drop-in integration [here](https://docs.adyen.com/online-payments/web-drop-in)
+
+1. Create a Kill Bill account and Kill Bill Payment (as a PluginProperty need to be sended enableRecurring = true if the payment is going to be recurring , if not can sent enableRecurring=false or simply ignore it ( by default is false)).
+```
+curl -v \
+    -X POST \
+    -u admin:password \
+    -H "X-Killbill-ApiKey: bob" \
+    -H "X-Killbill-ApiSecret: lazar" \
+    -H "Content-Type: application/json" \
+    -H "Accept: application/json" \
+    -H "X-Killbill-CreatedBy: demo" \
+    -H "X-Killbill-Reason: demo" \
+    -H "X-Killbill-Comment: demo" \
+    -d '{ "accountId": "2ad52f53-85ae-408a-9879-32a7e59dd03d", "pluginName": "adyen-plugin" ,"isDefault": true, "pluginInfo": { "isDefaultPaymentMethod": true, "properties": [ { "key": "enableRecurring", "value": "true", "isUpdatable": false } }' \
+    "http://127.0.0.1:8080/1.0/kb/accounts/8785164f-b5d7-4da1-9495-33f5105e8d80/paymentMethods" 
+```
+2. Call `/plugins/adyen-plugin/checkout` to generate a Session where the amount need to have the decimals point if the currency have it:
+```bash
+curl -v \
+     -X POST \
+     -u admin:password \
+     -H "X-Killbill-ApiKey: bob" \
+     -H "X-Killbill-ApiSecret: lazar" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -H "X-Killbill-CreatedBy: demo" \
+     -H "X-Killbill-Reason: demo" \
+     -H "X-Killbill-Comment: demo" \
+     "http://127.0.0.1:8080/plugins/adyen-plugin/checkout?kbAccountId=<KB_ACCOUNT_ID>&amount=<amount?&kbPaymentMethodId=<KB_PAYMENT_METHOD_ID>"
+```
+
+3. Redirect the user to the Adyen checkout page. The `sessionId` and `sessionData` are returned as part of the `formFields` (`id` key):
+
+
+
+
+
+## Development
+
+For testing you need to add your Stripe public and private key to `src/test/resources/stripe.properties`:
+
+```
+org.killbill.billing.plugin.stripe.apiKey=sk_test_XXX
+org.killbill.billing.plugin.stripe.publicKey=pk_test_XXX
+```
+
+## About
+
+Kill Bill is the leading Open-Source Subscription Billing & Payments Platform. For more information about the project, go to https://killbill.io/.
