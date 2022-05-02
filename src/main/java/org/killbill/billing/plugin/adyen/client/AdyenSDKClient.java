@@ -16,15 +16,15 @@
 package org.killbill.billing.plugin.adyen.client;
 
 import com.adyen.model.checkout.CreateCheckoutSessionResponse;
-import com.adyen.model.checkout.PaymentCaptureResource;
 import com.adyen.model.checkout.PaymentRefundResource;
+import com.adyen.model.checkout.PaymentReversalResource;
 import com.adyen.model.checkout.PaymentsResponse;
 import com.adyen.service.exception.ApiException;
 import java.io.IOException;
 import java.math.BigDecimal;
 import org.killbill.billing.catalog.api.Currency;
 
-public interface HttpClient {
+public interface AdyenSDKClient {
 
   public CreateCheckoutSessionResponse checkoutsessions(
       Currency currency,
@@ -32,6 +32,9 @@ public interface HttpClient {
       String transactionId,
       String kbAccountId,
       boolean isRecurring)
+      throws IOException, ApiException;
+
+  public PaymentReversalResource reversal(String transactionId, String paymentPspReference)
       throws IOException, ApiException;
 
   public PaymentRefundResource refund(
@@ -44,9 +47,5 @@ public interface HttpClient {
       String transactionId,
       String kbAccountId,
       String recurringDetailReference)
-      throws IOException, ApiException;
-
-  public PaymentCaptureResource capture(
-      Currency currency, BigDecimal kbAmount, String transactionId, String paymentPspReference)
       throws IOException, ApiException;
 }

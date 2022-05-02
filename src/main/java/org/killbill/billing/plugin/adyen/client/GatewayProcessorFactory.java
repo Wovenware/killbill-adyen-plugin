@@ -22,7 +22,7 @@ public class GatewayProcessorFactory {
   private GatewayProcessorFactory() {}
 
   public static GatewayProcessor get(AdyenConfigProperties adyenConfigProperties, AdyenDao dao) {
-    HttpClientImpl httpClient = new HttpClientImpl(adyenConfigProperties);
+    AdyenSDKClientImpl httpClient = new AdyenSDKClientImpl(adyenConfigProperties);
 
     return new AdyenProcessorImpl(httpClient, adyenConfigProperties);
   }

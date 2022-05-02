@@ -16,8 +16,8 @@
 package org.killbill.billing.plugin.adyen.client;
 
 import com.adyen.model.checkout.CreateCheckoutSessionResponse;
-import com.adyen.model.checkout.PaymentCaptureResource;
 import com.adyen.model.checkout.PaymentRefundResource;
+import com.adyen.model.checkout.PaymentReversalResource;
 import com.adyen.model.checkout.PaymentsResponse;
 import com.adyen.service.exception.ApiException;
 import java.io.IOException;
@@ -38,13 +38,13 @@ import org.slf4j.LoggerFactory;
 public class AdyenProcessorImpl implements GatewayProcessor {
   private static final Logger logger = LoggerFactory.getLogger(AdyenProcessorImpl.class);
 
-  private final HttpClientImpl httpClient;
+  private final AdyenSDKClientImpl httpClient;
 
   private static final String MERCHANT_ACCOUNT = "merchantAccount";
   private static final String API_KEY = "apiKey";
 
   public AdyenProcessorImpl(
-      HttpClientImpl httpClient, AdyenConfigProperties adyenConfigProperties) {
+      AdyenSDKClientImpl httpClient, AdyenConfigProperties adyenConfigProperties) {
     this.httpClient = httpClient;
   }
 
@@ -137,32 +137,6 @@ public class AdyenProcessorImpl implements GatewayProcessor {
   }
 
   @Override
-  public ProcessorOutputDTO capturePayment(ProcessorInputDTO input) {
-    PaymentCaptureResource response = null;
-    try {
-      response =
-          httpClient.capture(
-              input.getCurrency(),
-              input.getAmount(),
-              input.getKbTransactionId(),
-              input.getPspReference());
-    } catch (IOException e) {
-      logger.error("IO Exception{}", e.getMessage(), e);
-      e.printStackTrace();
-    } catch (ApiException e) {
-
-      logger.error("API Exception {} \n {}", e.getError(), e.getMessage(), e);
-      e.printStackTrace();
-    }
-
-    ProcessorOutputDTO outputDTO = new ProcessorOutputDTO();
-    if (response != null) {
-      outputDTO.setFirstPaymentReferenceId(response.getPspReference());
-    }
-    return outputDTO;
-  }
-
-  @Override
   public ProcessorInputDTO validateData(
       AdyenConfigurationHandler AdyenConfigurationHandler,
       Map<String, String> properties,
@@ -192,5 +166,27 @@ public class AdyenProcessorImpl implements GatewayProcessor {
 
   private boolean checkInvalidity(Collection<?> obj) {
     return obj == null || obj.isEmpty();
+  }
+
+  @Override
+  public ProcessorOutputDTO voidPayment(ProcessorInputDTO input) {
+    PaymentReversalResource response = null;
+    try {
+      response = httpClient.reversal(input.getKbTransactionId(), input.getPspReference());
+    } catch (IOException e) {
+      logger.error("IO Exception{}", e.getMessage(), e);
+      e.printStackTrace();
+    } catch (ApiException e) {
+
+      logger.error("API Exception {} \n {}", e.getError(), e.getMessage(), e);
+      e.printStackTrace();
+    }
+
+    ProcessorOutputDTO outputDTO = new ProcessorOutputDTO();
+    if (response != null) {
+      outputDTO.setFirstPaymentReferenceId(response.getPspReference());
+    }
+
+    return outputDTO;
   }
 }

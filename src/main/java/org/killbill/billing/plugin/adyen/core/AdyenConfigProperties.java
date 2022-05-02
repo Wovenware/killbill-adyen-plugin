@@ -87,7 +87,7 @@ public class AdyenConfigProperties {
 
   public String getCaptureDelayHours() {
     if (captureDelayHours == null || captureDelayHours.isEmpty()) {
-      return getClient(ADYEN_CAPTURE_DELAY_HOURS, "1");
+      return getClient(ADYEN_CAPTURE_DELAY_HOURS, null);
     }
 
     return captureDelayHours;

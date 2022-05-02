@@ -29,7 +29,7 @@ public interface GatewayProcessor {
 
   public ProcessorOutputDTO refundPayment(ProcessorInputDTO input);
 
-  public ProcessorOutputDTO capturePayment(ProcessorInputDTO input);
+  public ProcessorOutputDTO voidPayment(ProcessorInputDTO input);
 
   public ProcessorInputDTO validateData(
       AdyenConfigurationHandler adyenConfigurationHandler,

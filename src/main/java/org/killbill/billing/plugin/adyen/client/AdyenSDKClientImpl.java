@@ -22,10 +22,10 @@ import com.adyen.model.checkout.CreateCheckoutSessionRequest;
 import com.adyen.model.checkout.CreateCheckoutSessionRequest.RecurringProcessingModelEnum;
 import com.adyen.model.checkout.CreateCheckoutSessionRequest.ShopperInteractionEnum;
 import com.adyen.model.checkout.CreateCheckoutSessionResponse;
-import com.adyen.model.checkout.CreatePaymentCaptureRequest;
 import com.adyen.model.checkout.CreatePaymentRefundRequest;
-import com.adyen.model.checkout.PaymentCaptureResource;
+import com.adyen.model.checkout.CreatePaymentReversalRequest;
 import com.adyen.model.checkout.PaymentRefundResource;
+import com.adyen.model.checkout.PaymentReversalResource;
 import com.adyen.model.checkout.PaymentsRequest;
 import com.adyen.model.checkout.PaymentsResponse;
 import com.adyen.service.Checkout;
@@ -37,13 +37,13 @@ import org.killbill.billing.plugin.adyen.core.AdyenConfigProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HttpClientImpl implements HttpClient {
+public class AdyenSDKClientImpl implements AdyenSDKClient {
 
   private final AdyenConfigProperties adyenConfigProperties;
   private final Checkout checkout;
-  private static final Logger logger = LoggerFactory.getLogger(HttpClientImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(AdyenSDKClientImpl.class);
 
-  public HttpClientImpl(AdyenConfigProperties adyenConfigProperties) {
+  public AdyenSDKClientImpl(AdyenConfigProperties adyenConfigProperties) {
     this.adyenConfigProperties = adyenConfigProperties;
     Client client =
         new Client(
@@ -69,8 +69,8 @@ public class HttpClientImpl implements HttpClient {
     checkoutSession.setReturnUrl(adyenConfigProperties.getReturnUrl());
     checkoutSession.setAmount(amount);
     checkoutSession.setCountryCode(adyenConfigProperties.getRegion());
-    //    checkoutSession.setCaptureDelayHours(
-    //        Integer.valueOf(adyenConfigProperties.getCaptureDelayHours()));
+    checkoutSession.setCaptureDelayHours(
+        Integer.valueOf(adyenConfigProperties.getCaptureDelayHours()));
     checkoutSession.setShopperReference(kbAccountId);
     if (isRecurrent) {
       checkoutSession.setRecurringProcessingModel(RecurringProcessingModelEnum.CARDONFILE);
@@ -82,6 +82,17 @@ public class HttpClientImpl implements HttpClient {
   }
 
   @Override
+  public PaymentReversalResource reversal(String transactionId, String paymentPspReference)
+      throws IOException, ApiException {
+
+    CreatePaymentReversalRequest paymentReversalRequest = new CreatePaymentReversalRequest();
+
+    paymentReversalRequest.setMerchantAccount(adyenConfigProperties.getMerchantAccount());
+    paymentReversalRequest.setReference(transactionId);
+
+    return checkout.paymentsReversals(paymentPspReference, paymentReversalRequest);
+  }
+
   public PaymentRefundResource refund(
       Currency currency, BigDecimal kbAmount, String transactionId, String paymentPspReference)
       throws IOException, ApiException {
@@ -114,24 +125,11 @@ public class HttpClientImpl implements HttpClient {
     paymentsRequest.setRecurringProcessingModel(
         PaymentsRequest.RecurringProcessingModelEnum.CARD_ON_FILE);
     paymentsRequest.addOneClickData(recurringDetailReference, null);
-    //    paymentsRequest.setCaptureDelayHours(
-    //        Integer.valueOf(adyenConfigProperties.getCaptureDelayHours()));
+
+    paymentsRequest.setCaptureDelayHours(
+        Integer.valueOf(adyenConfigProperties.getCaptureDelayHours()));
 
     return checkout.payments(paymentsRequest);
-  }
-
-  @Override
-  public PaymentCaptureResource capture(
-      Currency currency, BigDecimal kbAmount, String transactionId, String paymentPspReference)
-      throws IOException, ApiException {
-    CreatePaymentCaptureRequest paymentCaptureRequest = new CreatePaymentCaptureRequest();
-    logger.info("this is the amount {}", kbAmount.toString());
-    Amount amount = new Amount().currency(currency.name()).value(convertToMinorUnit(kbAmount));
-    paymentCaptureRequest.setAmount(amount);
-    paymentCaptureRequest.setMerchantAccount(adyenConfigProperties.getMerchantAccount());
-    paymentCaptureRequest.setReference(transactionId);
-
-    return checkout.paymentsCaptures(paymentPspReference, paymentCaptureRequest);
   }
 
   private Long convertToMinorUnit(BigDecimal amount) {

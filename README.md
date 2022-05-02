@@ -6,9 +6,9 @@ A full end-to-end integration demo is available [here](https://github.com/killbi
 
 ## Kill Bill compatibility
 
-| Plugin version | Kill Bill version  | Adyen sdk version                                            |
-| -------------: | -----------------: | --------------------------------------------------------: |
-| 1.x.y          | 0.22.z             | 17.3.0 [2022-04-07](https://github.com/Adyen/adyen-java-api-library) |
+| Plugin version | Kill Bill version  | Adyen sdk version                                         | Checkout API Version|
+| -------------: | -----------------: | --------------------------------------------------------: |-------------------- |
+| 1.x.y          | 0.22.z             | 17.3.0 [2022-04-07](https://github.com/Adyen/adyen-java-api-library) |Version 68|
 
 
 
@@ -37,7 +37,7 @@ org.killbill.billing.plugin.adyen.returnUrl=test_XXX
 org.killbill.billing.plugin.adyen.merchantAccount=test_XXX
 org.killbill.billing.plugin.adyen.hcmaKey=test_XXX
 org.killbill.billing.plugin.adyen.enviroment= (TEST/LIVE) default is TEST
-org.killbill.billing.plugin.adyen.captureDelayHours=XX (Desire capture delay in hours after Authorize , default is "0") 
+org.killbill.billing.plugin.adyen.captureDelayHours=XX (Desire capture delay in hours after Authorize , number must be between 0 - 168 hr) 
 ```
 
 Alternatively, you can upload the configuration directly:

@@ -48,9 +48,14 @@ public class AdyenCheckoutService {
   }
 
   public Map<String, String> createSession(
-      UUID kbAccountId, CallContext context, BigDecimal amount, UUID paymentMethodId)
+      UUID kbAccountId,
+      CallContext context,
+      BigDecimal amount,
+      UUID paymentMethodId,
+      String password,
+      String username)
       throws PaymentPluginApiException {
-    killbillAPI.getSecurityApi().login("admin", "password");
+    killbillAPI.getSecurityApi().login(username, password);
     Account kbAccount = null;
     Payment payment = null;
     try {
@@ -64,24 +69,10 @@ public class AdyenCheckoutService {
     prop.add(new PluginProperty(IS_CHECKOUT, true, false));
     try {
 
-      //      payment =
-      //          killbillAPI
-      //              .getPaymentApi()
-      //              .createPurchase(
-      //                  kbAccount,
-      //                  paymentMethodId,
-      //                  null,
-      //                  amount,
-      //                  kbAccount.getCurrency(),
-      //                  DateTime.now(),
-      //                  null,
-      //                  null,
-      //                  prop,
-      //                  context);
       payment =
           killbillAPI
               .getPaymentApi()
-              .createAuthorization(
+              .createPurchase(
                   kbAccount,
                   paymentMethodId,
                   null,
@@ -92,6 +83,7 @@ public class AdyenCheckoutService {
                   null,
                   prop,
                   context);
+
     } catch (PaymentApiException e) {
       logger.error("Payment Api {}", e.getMessage(), e);
       throw new PaymentPluginApiException(INTERNAL, e.getMessage());
