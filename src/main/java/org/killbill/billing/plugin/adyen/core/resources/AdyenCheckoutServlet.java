@@ -32,13 +32,11 @@ import org.killbill.billing.plugin.api.PluginCallContext;
 import org.killbill.billing.plugin.core.PluginServlet;
 import org.killbill.billing.tenant.api.Tenant;
 import org.killbill.billing.util.callcontext.CallContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Singleton
 @Path("/checkout")
 public class AdyenCheckoutServlet extends PluginServlet {
-  private static final Logger logger = LoggerFactory.getLogger(AdyenCheckoutServlet.class);
+
   private final OSGIKillbillClock clock;
   private final AdyenCheckoutService service;
 
@@ -53,16 +51,13 @@ public class AdyenCheckoutServlet extends PluginServlet {
       @Named("kbAccountId") final UUID kbAccountId,
       @Named("amount") final BigDecimal amount,
       @Named("kbPaymentMethodId") final UUID kbPaymentMethodId,
-      @Local @Named("killbill_tenant") final Tenant tenant,
-      @Named("username") final String username,
-      @Named("password") final String password)
+      @Local @Named("killbill_tenant") final Tenant tenant)
       throws PaymentPluginApiException {
-    logger.info("password is {} and username is {}", password, username);
+
     final CallContext context =
         new PluginCallContext(
             AdyenActivator.PLUGIN_NAME, clock.getClock().getUTCNow(), kbAccountId, tenant.getId());
 
-    return service.createSession(
-        kbAccountId, context, amount, kbPaymentMethodId, password, username);
+    return service.createSession(kbAccountId, context, amount, kbPaymentMethodId, tenant.getId());
   }
 }

@@ -34,6 +34,7 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
+import org.killbill.billing.plugin.adyen.core.AdyenConfigurationHandler;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,19 +44,23 @@ public class AdyenCheckoutService {
   public static final String IS_CHECKOUT = "isCheckout";
   private OSGIKillbillAPI killbillAPI;
 
-  public AdyenCheckoutService(OSGIKillbillAPI killbillAPI) {
+  private AdyenConfigurationHandler adyenConfigurationHandler;
+
+  public AdyenCheckoutService(
+      OSGIKillbillAPI killbillAPI, AdyenConfigurationHandler adyenConfigurationHandler) {
     this.killbillAPI = killbillAPI;
+    this.adyenConfigurationHandler = adyenConfigurationHandler;
   }
 
   public Map<String, String> createSession(
-      UUID kbAccountId,
-      CallContext context,
-      BigDecimal amount,
-      UUID paymentMethodId,
-      String password,
-      String username)
+      UUID kbAccountId, CallContext context, BigDecimal amount, UUID paymentMethodId, UUID tenantId)
       throws PaymentPluginApiException {
-    killbillAPI.getSecurityApi().login(username, password);
+
+    killbillAPI
+        .getSecurityApi()
+        .login(
+            adyenConfigurationHandler.getConfigurable(tenantId).getUsername(),
+            adyenConfigurationHandler.getConfigurable(tenantId).getPassword());
     Account kbAccount = null;
     Payment payment = null;
     try {

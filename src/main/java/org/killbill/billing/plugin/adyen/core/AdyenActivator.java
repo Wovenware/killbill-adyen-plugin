@@ -73,7 +73,8 @@ public class AdyenActivator extends KillbillActivatorBase {
     logger.info("Registering healthcheck");
     final Healthcheck healthcheck = new AdyenHealthcheck();
     registerHealthcheck(context, healthcheck);
-    final AdyenCheckoutService checkoutService = new AdyenCheckoutService(killbillAPI);
+    final AdyenCheckoutService checkoutService =
+        new AdyenCheckoutService(killbillAPI, adyenConfigurationHandler);
     // Register a servlet (optional)
     final PluginApp pluginApp =
         new PluginAppBuilder(PLUGIN_NAME, killbillAPI, dataSource, super.clock, configProperties)

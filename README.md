@@ -37,6 +37,8 @@ org.killbill.billing.plugin.adyen.returnUrl=test_XXX
 org.killbill.billing.plugin.adyen.merchantAccount=test_XXX
 org.killbill.billing.plugin.adyen.hcmaKey=test_XXX
 org.killbill.billing.plugin.adyen.enviroment= (TEST/LIVE) default is TEST
+org.killbill.billing.plugin.adyen.password= (KillBill password)
+org.killbill.billing.plugin.adyen.username= (KillBill username)
 org.killbill.billing.plugin.adyen.captureDelayHours=XX (Desire capture delay in hours after Authorize , number must be between 0 - 168 hr) 
 ```
 
@@ -54,7 +56,9 @@ curl -v \
 org.killbill.billing.plugin.adyen.returnUrl=test_XXX
 org.killbill.billing.plugin.adyen.merchantAccount=test_XXX
 org.killbill.billing.plugin.adyen.hcmaKey=test_XXX
-org.killbill.billing.plugin.adyen.captureDelayHours=XX ' \
+org.killbill.billing.plugin.adyen.captureDelayHours=XX
+org.killbill.billing.plugin.adyen.password=xxx
+org.killbill.billing.plugin.adyen.username=xxx ' \
      http://127.0.0.1:8080/1.0/kb/tenants/uploadPluginConfig/adyen-plugin
 ```
 
@@ -98,19 +102,3 @@ curl -v \
 
 3. Redirect the user to the Adyen checkout page. The `sessionId` and `sessionData` are returned as part of the `formFields` (`id` key):
 
-
-
-
-
-## Development
-
-For testing you need to add your Stripe public and private key to `src/test/resources/stripe.properties`:
-
-```
-org.killbill.billing.plugin.stripe.apiKey=sk_test_XXX
-org.killbill.billing.plugin.stripe.publicKey=pk_test_XXX
-```
-
-## About
-
-Kill Bill is the leading Open-Source Subscription Billing & Payments Platform. For more information about the project, go to https://killbill.io/.

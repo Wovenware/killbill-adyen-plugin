@@ -34,14 +34,11 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.plugin.adyen.core.AdyenConfigProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class AdyenSDKClientImpl implements AdyenSDKClient {
 
   private final AdyenConfigProperties adyenConfigProperties;
   private final Checkout checkout;
-  private static final Logger logger = LoggerFactory.getLogger(AdyenSDKClientImpl.class);
 
   public AdyenSDKClientImpl(AdyenConfigProperties adyenConfigProperties) {
     this.adyenConfigProperties = adyenConfigProperties;

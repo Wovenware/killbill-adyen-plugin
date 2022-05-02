@@ -29,6 +29,8 @@ public class AdyenConfigProperties {
   public static final String ADYEN_MERCHANT_ACCOUNT = "ADYEN_MERCHANT_ACCOUNT";
   public static final String ADYEN_ENVIROMENT = "ADYEN_ENVIROMENT";
   public static final String ADYEN_CAPTURE_DELAY_HOURS = "ADYEN_CAPTURE_DELAY_HOURS";
+  public static final String ADYEN_KB_USERNAME = "ADYEN_KB_USERNAME";
+  public static final String ADYEN_KB_PASSWORD = "ADYEN_KB_PASSWORD";
 
   private final String region;
 
@@ -39,6 +41,10 @@ public class AdyenConfigProperties {
   private String captureDelayHours;
   private String enviroment;
 
+  private String username;
+
+  private String password;
+
   public AdyenConfigProperties(final Properties properties, final String region) {
     this.region = region;
 
@@ -48,6 +54,8 @@ public class AdyenConfigProperties {
     this.hcmaKey = properties.getProperty(PROPERTY_PREFIX + "hcmaKey");
     this.captureDelayHours = properties.getProperty(PROPERTY_PREFIX + "captureDelayHours");
     this.enviroment = properties.getProperty(PROPERTY_PREFIX + "enviroment");
+    this.username = properties.getProperty(PROPERTY_PREFIX + "username");
+    this.password = properties.getProperty(PROPERTY_PREFIX + "password");
   }
 
   public String getRegion() {
@@ -83,6 +91,22 @@ public class AdyenConfigProperties {
     }
 
     return returnUrl;
+  }
+
+  public String getUsername() {
+    if (username == null || username.isEmpty()) {
+      return getClient(ADYEN_KB_USERNAME, null);
+    }
+
+    return username;
+  }
+
+  public String getPassword() {
+    if (password == null || password.isEmpty()) {
+      return getClient(ADYEN_KB_PASSWORD, null);
+    }
+
+    return password;
   }
 
   public String getCaptureDelayHours() {

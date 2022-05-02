@@ -16,14 +16,13 @@
 package org.killbill.billing.plugin.adyen.client;
 
 import org.killbill.billing.plugin.adyen.core.AdyenConfigProperties;
-import org.killbill.billing.plugin.adyen.dao.AdyenDao;
 
 public class GatewayProcessorFactory {
   private GatewayProcessorFactory() {}
 
-  public static GatewayProcessor get(AdyenConfigProperties adyenConfigProperties, AdyenDao dao) {
+  public static GatewayProcessor get(AdyenConfigProperties adyenConfigProperties) {
     AdyenSDKClientImpl httpClient = new AdyenSDKClientImpl(adyenConfigProperties);
 
-    return new AdyenProcessorImpl(httpClient, adyenConfigProperties);
+    return new AdyenProcessorImpl(httpClient);
   }
 }

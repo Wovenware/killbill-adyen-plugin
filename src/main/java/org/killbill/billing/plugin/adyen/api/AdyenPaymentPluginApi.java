@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.joda.time.DateTime;
-import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.osgi.libs.killbill.OSGIConfigPropertiesService;
 import org.killbill.billing.osgi.libs.killbill.OSGIKillbillAPI;
@@ -313,11 +312,10 @@ public class AdyenPaymentPluginApi
     }
     GatewayProcessor gatewayProcessor =
         GatewayProcessorFactory.get(
-            adyenConfigurationHandler.getConfigurable(context.getTenantId()), adyenDao);
+            adyenConfigurationHandler.getConfigurable(context.getTenantId()));
     ProcessorInputDTO input =
         gatewayProcessor.validateData(
             adyenConfigurationHandler, mergedProperties, kbPaymentMethodId, kbAccountId);
-    logger.info("Is recurring? {}", paymentMethodRecord.getIsRecurring());
     if (paymentMethodRecord.getIsRecurring() != 48) {
       input.setPaymentMethod(PaymentMethod.RECURRING);
     } else {
@@ -404,7 +402,7 @@ public class AdyenPaymentPluginApi
     final Map<String, String> mergedProperties = PluginProperties.toStringMap(properties);
     GatewayProcessor gatewayProcessor =
         GatewayProcessorFactory.get(
-            adyenConfigurationHandler.getConfigurable(context.getTenantId()), adyenDao);
+            adyenConfigurationHandler.getConfigurable(context.getTenantId()));
 
     ProcessorInputDTO input =
         gatewayProcessor.validateData(
@@ -491,7 +489,7 @@ public class AdyenPaymentPluginApi
     final Map<String, String> mergedProperties = PluginProperties.toStringMap(properties);
     GatewayProcessor gatewayProcessor =
         GatewayProcessorFactory.get(
-            adyenConfigurationHandler.getConfigurable(context.getTenantId()), adyenDao);
+            adyenConfigurationHandler.getConfigurable(context.getTenantId()));
 
     ProcessorInputDTO input =
         gatewayProcessor.validateData(
@@ -560,7 +558,7 @@ public class AdyenPaymentPluginApi
           notificationHandler.handleNotificationJson(notification);
 
       NotificationRequestItem notificationItem = notificationRequest.getNotificationItems().get(0);
-      logger.info("request is  {}", notificationRequest);
+
       AdyenResponsesRecord record =
           adyenDao.getResponseFromMerchantReference(notificationItem.getMerchantReference());
       final CallContext tempContext =
@@ -572,12 +570,7 @@ public class AdyenPaymentPluginApi
       if (hmacValidator.validateHMAC(
           notificationItem,
           this.adyenConfigurationHandler.getConfigurable(tempContext.getTenantId()).getHMACKey())) {
-        logger.info("request is  {}", notificationRequest);
 
-        Account account =
-            this.killbillAPI
-                .getAccountUserApi()
-                .getAccountById(UUID.fromString(record.getKbAccountId()), tempContext);
         Payment payment =
             this.killbillAPI
                 .getPaymentApi()

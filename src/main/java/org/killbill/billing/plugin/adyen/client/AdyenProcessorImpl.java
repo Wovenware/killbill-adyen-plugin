@@ -21,14 +21,12 @@ import com.adyen.model.checkout.PaymentReversalResource;
 import com.adyen.model.checkout.PaymentsResponse;
 import com.adyen.service.exception.ApiException;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import org.joda.time.LocalDate;
 import org.killbill.billing.plugin.adyen.api.ProcessorInputDTO;
 import org.killbill.billing.plugin.adyen.api.ProcessorOutputDTO;
-import org.killbill.billing.plugin.adyen.core.AdyenConfigProperties;
 import org.killbill.billing.plugin.adyen.core.AdyenConfigurationHandler;
 import org.killbill.billing.plugin.api.PluginTenantContext;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -43,8 +41,7 @@ public class AdyenProcessorImpl implements GatewayProcessor {
   private static final String MERCHANT_ACCOUNT = "merchantAccount";
   private static final String API_KEY = "apiKey";
 
-  public AdyenProcessorImpl(
-      AdyenSDKClientImpl httpClient, AdyenConfigProperties adyenConfigProperties) {
+  public AdyenProcessorImpl(AdyenSDKClientImpl httpClient) {
     this.httpClient = httpClient;
   }
 
@@ -162,10 +159,6 @@ public class AdyenProcessorImpl implements GatewayProcessor {
     inputDTO.setCreatedDate(localdate);
     inputDTO.setKbAccountId(kbAccountId.toString().replace("-", ""));
     return inputDTO;
-  }
-
-  private boolean checkInvalidity(Collection<?> obj) {
-    return obj == null || obj.isEmpty();
   }
 
   @Override

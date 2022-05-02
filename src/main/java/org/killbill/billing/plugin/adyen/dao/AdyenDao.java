@@ -50,7 +50,6 @@ import org.killbill.billing.plugin.dao.payment.PluginPaymentDao;
 public class AdyenDao
     extends PluginPaymentDao<
         AdyenResponsesRecord, AdyenResponses, AdyenPaymentMethodsRecord, AdyenPaymentMethods> {
-  private static final String PURCHASE = "PURCHASE";
 
   public AdyenDao(final DataSource dataSource) throws SQLException {
     super(ADYEN_RESPONSES, ADYEN_PAYMENT_METHODS, dataSource);
@@ -200,7 +199,6 @@ public class AdyenDao
       final UUID kbPaymentId,
       final UUID kbPaymentTransactionId,
       final TransactionType transactionType,
-      final String transactionId,
       final BigDecimal amount,
       final Currency currency,
       final Map<String, String> additionalData,
