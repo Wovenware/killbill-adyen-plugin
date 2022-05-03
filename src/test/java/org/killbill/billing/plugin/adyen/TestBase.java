@@ -76,7 +76,7 @@ public class TestBase {
   public void setUp() throws Exception {
     setUpBeforeSuite();
 
-    logger.info("[sps-plugin][setUp] initialization");
+    logger.info("[setUp] initialization");
     EmbeddedDbHelper.instance().resetDB();
     dao = EmbeddedDbHelper.instance().getAdyenDao();
 
@@ -140,8 +140,7 @@ public class TestBase {
             configPropertiesService,
             clock,
             dao);
-    //    SpsPaymentPluginApiHelper helper = new SpsPaymentPluginApiHelper(killbillApi, dao);
-    //    Mockito.when(aigPaymentPluginApi.getHelper()).thenReturn(helper);
+ 
     TestUtils.updateOSGIKillbillAPI(killbillApi, adyenPaymentPluginApi);
 
     Mockito.doAnswer(
@@ -164,7 +163,7 @@ public class TestBase {
   }
 
   protected void setUpIntegration(String fileName) throws IOException {
-    logger.info("[sps-plugin][setUpIntegration] initialization");
+    logger.info("[setUpIntegration] initialization");
     final Properties properties = TestUtils.loadProperties(fileName);
     final AdyenConfigProperties AdyenConfigProperties = new AdyenConfigProperties(properties, "");
     adyenConfigPropertiesConfigurationHandler.setDefaultConfigurable(AdyenConfigProperties);
