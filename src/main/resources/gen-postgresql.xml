@@ -26,11 +26,11 @@
     <generator>
         <database>
             <name>org.jooq.meta.postgres.PostgresDatabase</name>
-            <includes>sps_.*</includes>
+            <includes>adyen_.*</includes>
             <inputSchema>public</inputSchema>
         </database>
         <target>
-            <packageName>aig.gi.killbill.billing.plugin.sps.dao.gen</packageName>
+            <packageName>org.killbill.billing.plugin.adyen.dao.gen</packageName>
             <directory>src/main/java/</directory>
         </target>
     </generator>
