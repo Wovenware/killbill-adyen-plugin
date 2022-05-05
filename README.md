@@ -2,7 +2,6 @@
 
 Plugin to use [Adyen](https://www.adyen.com/) as a gateway.
 
-A full end-to-end integration demo is available [here](https://github.com/killbill/killbill-stripe-demo).
 
 ## Kill Bill compatibility
 
