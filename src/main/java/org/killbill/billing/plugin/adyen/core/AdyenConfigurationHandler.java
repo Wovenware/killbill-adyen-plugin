@@ -34,7 +34,7 @@ import org.killbill.billing.plugin.api.notification.PluginTenantConfigurableConf
  *      -H "X-Killbill-CreatedBy: demo" \
  *      -d 'key1=foo1
  * key2=foo2' \
- *      "http://127.0.0.1:8080/1.0/kb/tenants/uploadPluginConfig/aig-plugin"
+ *      "http://127.0.0.1:8080/1.0/kb/tenants/uploadPluginConfig/adyen-plugin"
  * }</pre>
  */
 public class AdyenConfigurationHandler
